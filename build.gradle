@@ -44,7 +44,7 @@ dependencies {
 
 jar {
     from configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
-    manifest edu.wpi.first.gradlerio.GradleRIOPlugin.javaManifest('org.frcteam2910.o2017.Robot')
+    manifest edu.wpi.first.gradlerio.GradleRIOPlugin.javaManifest('org.frcteam2910.c2019.Main')
 }
 
 wrapper {
