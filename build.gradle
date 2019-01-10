@@ -39,7 +39,7 @@ deploy {
 }
 
 dependencies {
-
+    compile project(':common:robot')
 }
 
 jar {
