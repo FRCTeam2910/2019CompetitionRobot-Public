@@ -19,3 +19,6 @@ bin/
 
 # VS Code files
 .vscode/
+
+# MacOS system files
+.DS_Store
