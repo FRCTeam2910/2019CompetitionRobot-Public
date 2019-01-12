@@ -19,6 +19,10 @@ repositories {
     }
 
     maven {
+        url = "http://www.revrobotics.com/content/sw/max/sdk/maven/"
+    }
+
+    maven {
         url = 'http://first.wpi.edu/FRC/roborio/maven/release/'
     }
 }
@@ -39,6 +43,10 @@ deploy {
 }
 
 dependencies {
+    compile wpi.deps.vendor.java()
+    nativeZip wpi.deps.vendor.jni(wpi.platforms.roborio)
+    nativeDesktopZip wpi.deps.vendor.jni(wpi.platforms.desktop)
+
     compile project(':common:robot')
 }
 
