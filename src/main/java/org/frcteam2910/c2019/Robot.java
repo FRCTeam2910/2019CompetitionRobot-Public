@@ -10,11 +10,11 @@ import org.frcteam2910.common.robot.subsystems.SubsystemManager;
 public class Robot extends TimedRobot {
     private static final double UPDATE_DT = 5e-3; // 5 ms
 
-    private final ClimberSubsystem climberSubsystem = ClimberSubsystem.getInstance();
-    private final HatchSubsystem hatchSubsystem = HatchSubsystem.getInstance();
-    private final CargoGrabberSubsystem cargoGrabberSubsystem = CargoGrabberSubsystem.getInstance();
-    private final DrivetrainSubsystem drivetrainSubsystem = DrivetrainSubsystem.getInstance();
-    private final SubsystemManager subsystemManager = new SubsystemManager(hatchSubsystem, climberSubsystem, drivetrainSubsystem, cargoGrabberSubsystem);
+    private final SubsystemManager subsystemManager = new SubsystemManager(
+            HatchSubsystem.getInstance(),
+            ClimberSubsystem.getInstance(),
+            DrivetrainSubsystem.getInstance(),
+            CargoGrabberSubsystem.getInstance());
 
 
     @Override
