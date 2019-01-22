@@ -21,6 +21,5 @@ steps:
     publishJUnitResults: false
     testResultsFiles: '**/TEST-*.xml'
 
-    # build is currently broken in this version of gradlerio
     # We're also using --no-daemon in order to speed up build times.
-    tasks: 'assemble --no-daemon'
+    tasks: 'build --no-daemon'
