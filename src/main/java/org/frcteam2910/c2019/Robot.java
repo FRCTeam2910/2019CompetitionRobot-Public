@@ -1,10 +1,12 @@
 package org.frcteam2910.c2019;
 
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.command.Scheduler;
 import org.frcteam2910.c2019.subsystems.ClimberSubsystem;
 import org.frcteam2910.c2019.subsystems.DrivetrainSubsystem;
 import org.frcteam2910.c2019.subsystems.HatchSubsystem;
 import org.frcteam2910.c2019.subsystems.CargoGrabberSubsystem;
+import org.frcteam2910.common.drivers.SwerveModule;
 import org.frcteam2910.common.robot.subsystems.SubsystemManager;
 
 public class Robot extends TimedRobot {
@@ -16,19 +18,48 @@ public class Robot extends TimedRobot {
             DrivetrainSubsystem.getInstance(),
             CargoGrabberSubsystem.getInstance());
 
+    private static final OI oi = new OI();
+
+    public Robot() {
+        oi.bindButtons();
+    }
+
+    public static OI getOi() {
+        return oi;
+    }
+
+    @Override
+    public void robotInit() {
+        subsystemManager.enableKinematicLoop(UPDATE_DT);
+    }
+
+    @Override
+    public void robotPeriodic() {
+        subsystemManager.outputToSmartDashboard();
+    }
 
     @Override
     public void teleopInit() {
-        subsystemManager.enableKinematicLoop(UPDATE_DT);
+
+    }
+
+    @Override
+    public void teleopPeriodic() {
+        Scheduler.getInstance().run();
     }
 
     @Override
     public void autonomousInit() {
-        subsystemManager.enableKinematicLoop(UPDATE_DT);
+
+    }
+
+    @Override
+    public void autonomousPeriodic() {
+        Scheduler.getInstance().run();
     }
 
     @Override
     public void disabledInit() {
-        subsystemManager.disableKinematicLoop();
+
     }
 }
