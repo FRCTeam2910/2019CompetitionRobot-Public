@@ -6,7 +6,7 @@ import org.frcteam2910.c2019.subsystems.ClimberSubsystem;
 import org.frcteam2910.c2019.subsystems.DrivetrainSubsystem;
 import org.frcteam2910.c2019.subsystems.HatchSubsystem;
 import org.frcteam2910.c2019.subsystems.CargoGrabberSubsystem;
-import org.frcteam2910.common.drivers.SwerveModule;
+import org.frcteam2910.c2019.subsystems.ArmSubsystem;
 import org.frcteam2910.common.robot.subsystems.SubsystemManager;
 
 public class Robot extends TimedRobot {
@@ -16,7 +16,8 @@ public class Robot extends TimedRobot {
             HatchSubsystem.getInstance(),
             ClimberSubsystem.getInstance(),
             DrivetrainSubsystem.getInstance(),
-            CargoGrabberSubsystem.getInstance());
+            CargoGrabberSubsystem.getInstance(),
+            ArmSubsystem.getInstance());
 
     private static final OI oi = new OI();
 
