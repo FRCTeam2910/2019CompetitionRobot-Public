@@ -1,0 +1,82 @@
+plugins {
+    id 'application'
+    id 'java'
+    
+    // This plugin is responsible for deploying the code to the raspberry pi
+    id 'jaci.gradle.EmbeddedTools'
+    
+    // This plugin packages all the dependencies into a "fat jar"
+    id 'com.github.johnrengelman.shadow' version '4.0.4'
+}
+
+sourceCompatibility = JavaVersion.VERSION_11
+
+application {
+    mainClassName = "org.frcteam2910.c2019.vision.Main"
+}
+
+repositories {
+    maven {
+        url = 'http://first.wpi.edu/FRC/roborio/maven/release/'
+    }
+}
+
+deploy {
+    targets {
+        target('raspberrypi') {
+            directory = '/home/pi'
+
+            locations {
+                ssh {
+                    address = 'raspberrypi.local'
+                    user = 'pi'
+                    password = 'raspberry'
+                }
+
+                ssh {
+                    address = '10.29.10.43' // The static IP of the raspberry pi
+                    user = 'pi'
+                    password = 'raspberry'
+                }
+            }
+        }
+    }
+
+    artifacts {
+        javaArtifact('visionapp') {
+            jar = 'shadowJar'
+            targets << 'raspberrypi'
+        }
+        
+        fileArtifact('serviceFile') {
+            file = file('pivision.service') // Set the file to deploy. Required.
+            targets << 'raspberrypi'
+            postdeploy << {
+                // Move service file to appropriate location
+                execute 'sudo mv /home/pi/pivision.service /etc/systemd/system/pivision.service'
+                // Ensure the service is enabled
+                execute 'sudo systemctl enable pivision.service'
+                // Restart the service
+                execute 'sudo systemctl restart pivision.service'
+            }
+        }
+    }
+}
+
+
+dependencies {
+    compile group: 'edu.wpi.first.wpiutil', name: 'wpiutil-java', version: '2019.1.1'
+
+    compile group: 'edu.wpi.first.thirdparty.frc2019.opencv', name: 'opencv-java', version: '3.4.4-4'
+    runtime group: 'edu.wpi.first.thirdparty.frc2019.opencv', name: 'opencv-jni', version: '3.4.4-4', classifier: 'linuxraspbian'
+    
+    // The desktop natives allow for testing locally before deploying
+    runtime group: 'edu.wpi.first.thirdparty.frc2019.opencv', name: 'opencv-jni', version: '3.4.4-4', classifier: 'linuxx86-64'
+    runtime group: 'edu.wpi.first.thirdparty.frc2019.opencv', name: 'opencv-jni', version: '3.4.4-4', classifier: 'osxx86-64'
+    runtime group: 'edu.wpi.first.thirdparty.frc2019.opencv', name: 'opencv-jni', version: '3.4.4-4', classifier: 'windowsx86-64'
+
+    compile group: 'edu.wpi.first.ntcore', name: 'ntcore-java', version: '2019.1.1'
+    runtime group: 'edu.wpi.first.ntcore', name: 'ntcore-jni', version: '2019.1.1', classifier: 'all'
+
+    compile project(':common')
+}

@@ -1,0 +1,18 @@
+[Unit]
+Description=PiVision service. Used for calculating the distance away from a target detected by the Limelight.
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+# Restart only if the service ends in a non-zero status code
+# Can be changed to "always" to always run the service
+Restart=on-failure
+# Restart 1 second after service dies
+RestartSec=1
+User=pi
+WorkingDirectory=/home/pi
+ExecStart=/usr/bin/java -jar /home/pi/vision-coprocessor.jar
+
+[Install]
+WantedBy=multi-user.target

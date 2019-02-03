@@ -2,3 +2,4 @@ rootProject.name = '2019CompetitionRobot'
 
 include 'common'
 include 'common:robot'
+include 'vision-coprocessor'
