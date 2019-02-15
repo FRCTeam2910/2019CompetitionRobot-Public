@@ -17,7 +17,7 @@ public class Mk2SwerveModule extends SwerveModule {
     private static final PidConstants ANGLE_CONSTANTS = new PidConstants(0.5, 0.0, 0.0001);
     private static final double DRIVE_TICKS_PER_INCH = (1.0 / 6.71) * (Math.PI * 4.0);
 
-    private static final double CAN_UPDATE_RATE = 200.0;
+    private static final double CAN_UPDATE_RATE = 50.0;
 
     private final double angleOffset;
 
@@ -26,12 +26,21 @@ public class Mk2SwerveModule extends SwerveModule {
     private CANSparkMax driveMotor;
     private CANEncoder driveEncoder;
 
-    private AtomicLong driveEncoderValue = new AtomicLong();
-    private AtomicLong driveOutputValue = new AtomicLong();
+    private final Object canLock = new Object();
+    private double driveEncoderTicks = 0.0;
+    private double drivePercentOutput = 0.0;
 
     private Notifier canUpdateNotifier = new Notifier(() -> {
-        driveEncoderValue.set(Double.doubleToRawLongBits(driveEncoder.getPosition()));
-        driveMotor.set(Double.longBitsToDouble(driveOutputValue.get()));
+        double driveEncoderTicks = driveEncoder.getPosition();
+        synchronized (canLock) {
+            Mk2SwerveModule.this.driveEncoderTicks = driveEncoderTicks;
+        }
+
+        double drivePercentOutput;
+        synchronized (canLock) {
+            drivePercentOutput = Mk2SwerveModule.this.drivePercentOutput;
+        }
+        driveMotor.set(drivePercentOutput);
     });
 
     private PidController angleController = new PidController(ANGLE_CONSTANTS);
@@ -65,7 +74,12 @@ public class Mk2SwerveModule extends SwerveModule {
 
     @Override
     protected double readDistance() {
-        return Double.longBitsToDouble(driveEncoderValue.get()) / DRIVE_TICKS_PER_INCH;
+        double driveEncoderTicks;
+        synchronized (canLock) {
+            driveEncoderTicks = this.driveEncoderTicks;
+        }
+
+        return driveEncoderTicks / DRIVE_TICKS_PER_INCH;
     }
 
     @Override
@@ -75,7 +89,9 @@ public class Mk2SwerveModule extends SwerveModule {
 
     @Override
     protected void setDriveOutput(double output) {
-        driveOutputValue.set(Double.doubleToRawLongBits(output));
+        synchronized (canLock) {
+            this.drivePercentOutput = output;
+        }
     }
 
     @Override
