@@ -4,6 +4,7 @@ import com.revrobotics.CANEncoder;
 import com.revrobotics.CANSparkMax;
 import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.Notifier;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Spark;
 import org.frcteam2910.common.control.PidConstants;
 import org.frcteam2910.common.control.PidController;
@@ -63,7 +64,7 @@ public class Mk2SwerveModule extends SwerveModule {
 
     @Override
     protected double readAngle() {
-        double angle = (1.0 - angleEncoder.getVoltage() / ANALOG_INPUT_MAX_VOLTAGE) * 2.0 * Math.PI + angleOffset;
+        double angle = (1.0 - angleEncoder.getVoltage() / RobotController.getVoltage5V()) * 2.0 * Math.PI + angleOffset;
         angle %= 2.0 * Math.PI;
         if (angle < 0.0) {
             angle += 2.0 * Math.PI;
