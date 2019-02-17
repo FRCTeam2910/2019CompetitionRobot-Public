@@ -5,9 +5,13 @@ public class RobotMap {
     public static final int GRABBER_TOP_MOTOR = 5;
     public static final int GRABBER_BOTTOM_MOTOR = 6;
 
-    public static final int ARM_MOTOR_A = 7;
+    public static final int ARM_LOWER_LIMIT_SWITCH_CHANNEL = 7; //TODO: FIND REAL VALUE
+    public static final int ARM_UPPER_LIMIT_SWITCH_CHANNEL = 8; //TODO: FIND REAL VALUE
+
+    public static final int CARGO_ARM_ENCODER_PORT = 4;
+
+    public static final int ARM_MOTOR_A = 9;
     public static final int ARM_MOTOR_B = 8;
-    // Currently both are temporary and literally magic numbers afaik
 
     public static final int CLIMBER_SOLENOID_MODULE = 0;
     public static final int CLIMBER_SOLENOID_CHANNEL = 1;
