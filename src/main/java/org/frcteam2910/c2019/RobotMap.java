@@ -9,6 +9,9 @@ public class RobotMap {
     public static final int ARM_MOTOR_B = 8;
     // Currently both are temporary and literally magic numbers afaik
 
+    public static final int CLIMBER_SOLENOID_MODULE = 0;
+    public static final int CLIMBER_SOLENOID_CHANNEL = 1;
+
     public static final int DRIVETRAIN_FRONT_LEFT_ANGLE_MOTOR = 4;
     public static final double DRIVETRAIN_FRONT_LEFT_ANGLE_OFFSET = Math.toRadians(-223.0 + 180.0);
     public static final int DRIVETRAIN_FRONT_LEFT_ANGLE_ENCODER = 0;
