@@ -2,7 +2,7 @@ package org.frcteam2910.c2019.commands;
 
 
 import edu.wpi.first.wpilibj.command.Command;
-import org.frcteam2910.c2019.subsystems.ArmSubsystem;
+import org.frcteam2910.c2019.subsystems.CargoArmSubsystem;
 
 
 public class SetArmAngleCommand extends Command {
@@ -10,16 +10,16 @@ public class SetArmAngleCommand extends Command {
 
 	public SetArmAngleCommand(double angle) {
 		this.angle = angle;
-		requires(ArmSubsystem.getInstance());
+		requires(CargoArmSubsystem.getInstance());
 	}
 
 	@Override
 	protected void initialize() {
-		ArmSubsystem.getInstance().setTargetAngle(angle);
+		CargoArmSubsystem.getInstance().setTargetAngle(angle);
 	}
 
 	@Override
 	protected boolean isFinished() {
-		return ArmSubsystem.getInstance().isWithinTargetAngleRange(angle);
+		return CargoArmSubsystem.getInstance().isWithinTargetAngleRange(angle);
 	}
 }

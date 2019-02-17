@@ -8,8 +8,10 @@ import org.frcteam2910.common.robot.subsystems.Subsystem;
 public class ClimberSubsystem extends Subsystem {
     private static final ClimberSubsystem instance = new ClimberSubsystem();
 
-    private Solenoid climberSolenoid = new Solenoid(RobotMap.CLIMBER_SOLENOID_MODULE,
-            RobotMap.CLIMBER_SOLENOID_CHANNEL);
+    private Solenoid[] climberSolenoids = {
+            new Solenoid(RobotMap.CLIMBER_SOLENOID_MODULE_A, RobotMap.CLIMBER_SOLENOID_CHANNEL_A),
+            new Solenoid(RobotMap.CLIMBER_SOLENOID_MODULE_B, RobotMap.CLIMBER_SOLENOID_CHANNEL_B)
+    };
 
     private final Object canLock = new Object();
     private boolean climberStateChanged = false;
@@ -26,7 +28,9 @@ public class ClimberSubsystem extends Subsystem {
         }
 
         if (localClimberStateChanged) {
-            climberSolenoid.set(localClimberExtended);
+            for (Solenoid solenoid : climberSolenoids) {
+                solenoid.set(localClimberExtended);
+            }
         }
     });
 

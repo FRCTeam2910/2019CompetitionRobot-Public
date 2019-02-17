@@ -53,9 +53,19 @@ public class CargoGrabberSubsystem extends Subsystem {
     }
 
     public void setIntakeSpeed(double speed) {
+        setTopIntakeSpeed(speed);
+        setBottomIntakeSpeed(-Math.abs(speed));
+    }
+
+    public void setTopIntakeSpeed(double speed) {
         synchronized (canLock) {
             topMotorSpeed = speed;
-            bottomMotorSpeed = -Math.abs(speed);
+        }
+    }
+
+    public void setBottomIntakeSpeed(double speed) {
+        synchronized (canLock) {
+            bottomMotorSpeed = speed;
         }
     }
 

@@ -2,11 +2,9 @@ package org.frcteam2910.c2019;
 
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.command.Scheduler;
-import org.frcteam2910.c2019.subsystems.ClimberSubsystem;
-import org.frcteam2910.c2019.subsystems.DrivetrainSubsystem;
-import org.frcteam2910.c2019.subsystems.HatchSubsystem;
-import org.frcteam2910.c2019.subsystems.CargoGrabberSubsystem;
-import org.frcteam2910.c2019.subsystems.ArmSubsystem;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import org.frcteam2910.c2019.subsystems.*;
+import org.frcteam2910.common.robot.drivers.NavX;
 import org.frcteam2910.common.robot.subsystems.SubsystemManager;
 
 public class Robot extends TimedRobot {
@@ -17,7 +15,7 @@ public class Robot extends TimedRobot {
             ClimberSubsystem.getInstance(),
             DrivetrainSubsystem.getInstance(),
             CargoGrabberSubsystem.getInstance(),
-            ArmSubsystem.getInstance());
+            CargoArmSubsystem.getInstance());
 
     private static final OI oi = new OI();
 
@@ -37,6 +35,9 @@ public class Robot extends TimedRobot {
     @Override
     public void robotPeriodic() {
         subsystemManager.outputToSmartDashboard();
+
+        SmartDashboard.putNumber("Gyro Pitch",
+                Math.toDegrees(Superstructure.getInstance().getGyroscope().getAxis(NavX.Axis.ROLL)));
     }
 
     @Override

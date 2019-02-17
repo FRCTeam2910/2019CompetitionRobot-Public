@@ -13,7 +13,6 @@ import org.frcteam2910.common.drivers.Gyroscope;
 import org.frcteam2910.common.drivers.SwerveModule;
 import org.frcteam2910.common.math.Vector2;
 import org.frcteam2910.common.robot.commands.HolonomicDriveCommand;
-import org.frcteam2910.common.robot.drivers.NavX;
 import org.frcteam2910.common.robot.subsystems.SwerveDrivetrain;
 
 public class DrivetrainSubsystem extends SwerveDrivetrain {
@@ -21,8 +20,6 @@ public class DrivetrainSubsystem extends SwerveDrivetrain {
     private static final double WHEELBASE = 23.5;
 
     private static final DrivetrainSubsystem instance = new DrivetrainSubsystem();
-
-    private Gyroscope gyroscope = new NavX(SPI.Port.kMXP);
 
     private SwerveModule[] swerveModules;
 
@@ -70,8 +67,6 @@ public class DrivetrainSubsystem extends SwerveDrivetrain {
                 backLeftModule,
                 backRightModule,
         };
-
-        gyroscope.calibrate();
     }
 
     public static DrivetrainSubsystem getInstance() {
@@ -85,7 +80,7 @@ public class DrivetrainSubsystem extends SwerveDrivetrain {
 
     @Override
     public Gyroscope getGyroscope() {
-        return gyroscope;
+        return Superstructure.getInstance().getGyroscope();
     }
 
     @Override
