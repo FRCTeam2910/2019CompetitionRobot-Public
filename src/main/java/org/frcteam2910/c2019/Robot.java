@@ -11,11 +11,11 @@ public class Robot extends TimedRobot {
     private static final double UPDATE_DT = 5e-3; // 5 ms
 
     private final SubsystemManager subsystemManager = new SubsystemManager(
-            HatchSubsystem.getInstance(),
             ClimberSubsystem.getInstance(),
             DrivetrainSubsystem.getInstance(),
             CargoGrabberSubsystem.getInstance(),
-            CargoArmSubsystem.getInstance());
+            CargoArmSubsystem.getInstance(),
+            HatchPlacerSubsystem.getInstance());
 
     private static final OI oi = new OI();
 

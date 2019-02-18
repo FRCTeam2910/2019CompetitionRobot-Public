@@ -5,6 +5,7 @@ import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
 import edu.wpi.first.wpilibj.Notifier;
+import org.frcteam2910.c2019.commands.CargoPickupCommand;
 import org.frcteam2910.common.robot.subsystems.Subsystem;
 import org.frcteam2910.c2019.RobotMap;
 
@@ -35,6 +36,8 @@ public class CargoGrabberSubsystem extends Subsystem {
     });
 
     private CargoGrabberSubsystem() {
+        topMotor.setSmartCurrentLimit(20);
+
         canThread.startPeriodic(CAN_THREAD_UPDATE_DURATION);
     }
 
@@ -76,6 +79,6 @@ public class CargoGrabberSubsystem extends Subsystem {
 
     @Override
     protected void initDefaultCommand() {
-
+        setDefaultCommand(new CargoPickupCommand(0.6));
     }
 }

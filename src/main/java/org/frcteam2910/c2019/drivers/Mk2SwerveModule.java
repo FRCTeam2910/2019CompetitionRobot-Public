@@ -55,6 +55,8 @@ public class Mk2SwerveModule extends SwerveModule {
         this.driveMotor = driveMotor;
         this.driveEncoder = new CANEncoder(driveMotor);
 
+        driveMotor.setSmartCurrentLimit(60);
+
         angleController.setInputRange(0.0, 2.0 * Math.PI);
         angleController.setContinuous(true);
         angleController.setOutputRange(-0.5, 0.5);

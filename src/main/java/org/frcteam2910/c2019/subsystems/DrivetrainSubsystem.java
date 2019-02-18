@@ -3,8 +3,6 @@ package org.frcteam2910.c2019.subsystems;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
 import edu.wpi.first.wpilibj.AnalogInput;
-import edu.wpi.first.wpilibj.AnalogPotentiometer;
-import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.Spark;
 import org.frcteam2910.c2019.Robot;
 import org.frcteam2910.c2019.RobotMap;
@@ -95,8 +93,8 @@ public class DrivetrainSubsystem extends SwerveDrivetrain {
 
     @Override
     protected void initDefaultCommand() {
-        setDefaultCommand(new HolonomicDriveCommand(this, Robot.getOi().controller.getLeftYAxis(),
-                Robot.getOi().controller.getLeftXAxis(), Robot.getOi().controller.getRightXAxis(),
-                Robot.getOi().controller.getRightBumperButton()));
+        setDefaultCommand(new HolonomicDriveCommand(this, Robot.getOi().primaryController.getLeftYAxis(),
+                Robot.getOi().primaryController.getLeftXAxis(), Robot.getOi().primaryController.getRightXAxis(),
+                Robot.getOi().primaryController.getRightBumperButton()));
     }
 }

@@ -1,7 +1,6 @@
 package org.frcteam2910.c2019;
 
 public class RobotMap {
-
     public static final int GRABBER_TOP_MOTOR = 5;
     public static final int GRABBER_BOTTOM_MOTOR = 2;
 
@@ -9,6 +8,10 @@ public class RobotMap {
     public static final int ARM_UPPER_LIMIT_SWITCH_CHANNEL = 8; //TODO: FIND REAL VALUE
 
     public static final int CARGO_ARM_ENCODER_PORT = 4;
+
+    public static final int HATCH_PLACER_MOTOR = 4;
+    public static final int HATCH_PLACER_SOLENOID_MODULE_NUMBER = 0;
+    public static final int HATCH_PLACER_SOLENOID_CHANNEL = 2;
 
     public static final int ARM_MOTOR_A = 9;
     public static final int ARM_MOTOR_B = 8;
