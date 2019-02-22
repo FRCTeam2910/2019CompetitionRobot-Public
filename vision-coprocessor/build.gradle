@@ -32,12 +32,6 @@ deploy {
                     user = 'pi'
                     password = 'raspberry'
                 }
-
-                ssh {
-                    address = '10.29.10.43' // The static IP of the raspberry pi
-                    user = 'pi'
-                    password = 'raspberry'
-                }
             }
         }
     }
@@ -79,4 +73,5 @@ dependencies {
     runtime group: 'edu.wpi.first.ntcore', name: 'ntcore-jni', version: '2019.1.1', classifier: 'all'
 
     compile project(':common')
+    compile project('api')
 }

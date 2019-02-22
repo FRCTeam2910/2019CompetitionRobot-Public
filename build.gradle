@@ -49,6 +49,7 @@ dependencies {
     nativeDesktopZip wpi.deps.vendor.jni(wpi.platforms.desktop)
 
     compile project(':common:robot')
+    compile project(':vision-coprocessor:api')
 }
 
 jar {
