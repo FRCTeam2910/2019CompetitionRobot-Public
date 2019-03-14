@@ -2,12 +2,15 @@ package org.frcteam2910.c2019.vision;
 
 import edu.wpi.first.networktables.NetworkTable;
 import org.frcteam2910.c2019.vision.drivers.Limelight;
+import org.frcteam2910.common.math.RigidTransform2;
+import org.frcteam2910.common.math.Rotation2;
 import org.frcteam2910.common.math.Vector2;
 import org.opencv.core.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
 
+import static org.opencv.calib3d.Calib3d.Rodrigues;
 import static org.opencv.calib3d.Calib3d.solvePnP;
 import static org.opencv.core.Core.PCACompute2;
 
@@ -22,13 +25,12 @@ public class VisionTargetingPipeline {
 
     /**
      * Constructor for the pipeline
-     * @param table NetworkTable instance for accessing the Limelight
      * @param objp Object points for the target
      * @param dist Distortion Coefficients for the camera
      * @param mtx Camera Matrix for the camera
      */
-    public VisionTargetingPipeline(NetworkTable table, double[][] objp, double[] dist, double[][] mtx) {
-        limelight = new Limelight(table);
+    public VisionTargetingPipeline(Limelight limelight, double[][] objp, double[] dist, double[][] mtx) {
+        this.limelight = limelight;
 
         objectPoints = doubleArrayToMatOfPoint3f(objp);
         numberOfPoints = objp.length;
@@ -41,7 +43,7 @@ public class VisionTargetingPipeline {
      * @return Displacement left/right and forward/back as a Vector2
      * @throws Exception when there is no target
      */
-    public Vector2 getTranslation() throws Exception {
+    public RigidTransform2 getTranslation() throws Exception {
         double[][] points = new double[numberOfPoints][2];
         limelight.getCorners(numberOfPoints, points);
         if (limelight.hasTarget()) {
@@ -51,16 +53,21 @@ public class VisionTargetingPipeline {
             Mat midPoint = new Mat();
             Mat x = new Mat(1, 2, CvType.CV_32F);
             Mat y = new Mat(1, 2, CvType.CV_32F);
-            double rotation = getPrincipalAxes(corners, midPoint, x, y);
+            double skew = getPrincipalAxes(corners, midPoint, x, y);
 
             // Sort the image points
-            sortImgPts(corners, rotation, midPoint);
+            sortImgPts(corners, skew, midPoint);
 
-            // solvePnP, get our distance
+            // solvePnP, get our distance and angle to target
             Mat rotationVectors = new Mat();
             Mat translationVectors = new Mat();
             solvePnP(objectPoints, matToMatOfPoint2f(corners), cameraMatrix, distortionCoefficients, rotationVectors, translationVectors);
-            return new Vector2(translationVectors.get(0, 0)[0], translationVectors.get(2, 0)[0]);
+            skew = getAngleToTarget(rotationVectors);
+
+            // Prepare and return the RigidTransformation2
+            Vector2 translation = new Vector2(translationVectors.get(0, 0)[0], translationVectors.get(2, 0)[0]);
+            Rotation2 rotation = Rotation2.fromRadians(skew);
+            return new RigidTransform2(translation, rotation);
         }
         throw new Exception("Target not available");
     }
@@ -101,7 +108,7 @@ public class VisionTargetingPipeline {
 
             // Get the angle
             double angle = getAngle(horizontal, temp, true);
-            ImagePoint2019 pt = new ImagePoint2019(angle, new Point(imgpts[i][0], imgpts[i][1]), temp);
+            ImagePoint2019 pt = new ImagePoint2019(angle, new Point(imgpts[i][0], imgpts[i][1]));
             points.add(pt);
         }
         // Now sort the arrays
@@ -111,6 +118,27 @@ public class VisionTargetingPipeline {
         for (int i = 0; i < numberOfPoints; i++) {
             corners.put(i, 0, pointToDoubleArray(points.get(i).getPoint()));
         }
+    }
+
+    /**
+     * This returns the angle to the target from the rotation vectors which was returned by solvePnP()
+     * @param rotationVectors The rotation vectors calculated from solvePnP()
+     * @return returns our angle to the target
+     */
+    private double getAngleToTarget(Mat rotationVectors) {
+        Mat dst = new Mat();
+        Rodrigues(rotationVectors, dst);
+        dst = dst.row(2);
+        Point pt = new Point(dst.get(0, 0)[0], dst.get(0, 2)[0]);
+        norm(pt);
+        double angle =  Math.PI - Math.acos(pt.dot(new Point(0, 1)));
+
+        Point3 crossProduct = new Point3();
+        crossProduct(new Point3(0, 0, 1), matToPoint3(dst), crossProduct);
+        if (crossProduct.y < 0.0) {
+            angle *= -1;
+        }
+        return angle;
     }
 
     /**
@@ -164,6 +192,18 @@ public class VisionTargetingPipeline {
     }
 
     /**
+     * Returns the cross product of two vectors. Remember the resulting vector differs depending on the order of the operation
+     * @param a Vector A
+     * @param b Vector B
+     * @param result A vector where the result will be stored
+     */
+    private static void crossProduct(Point3 a, Point3 b, Point3 result) {
+        result.x = a.y * b.z - a.z * b.y;
+        result.y = a.z * b.x - a.x * b.z;
+        result.z = a.x * b.y - a.y * b.x;
+    }
+
+    /**
      * Converts a matrix to a point. The matrix, of course, must represent a 2D point
      * @param mat The matrix to convert
      * @return The Point representation of the Matrix
@@ -172,6 +212,19 @@ public class VisionTargetingPipeline {
         Point result = new Point();
         result.x = mat.get(0, 0)[0];
         result.y = mat.get(0, 1)[0];
+        return result;
+    }
+
+    /**
+     * Converts a matrix to a point. The matrix, of course, must represent a 3D point
+     * @param mat The matrix to convert
+     * @return The Point3 representation of the matrix
+     */
+    private static Point3 matToPoint3(Mat mat) {
+        Point3 result = new Point3();
+        result.x = mat.get(0, 0)[0];
+        result.y = mat.get(0, 1)[0];
+        result.z = mat.get(0, 2)[0];
         return result;
     }
 
@@ -229,6 +282,11 @@ public class VisionTargetingPipeline {
 
     // New undocumented things below
 
+    /**
+     * Converts a 2 dimensional double array to a MatOfPoint2f
+     * @param corners The 2 dimensional double array to be converted
+     * @return returns a MatOfPoint2f
+     */
     private static MatOfPoint2f doubleArrayToMatOfPoint2f(double[][] corners) {
         ArrayList<Point> points = new ArrayList<Point>();
         for (int i = 0; i < 8; i++) {
@@ -237,6 +295,11 @@ public class VisionTargetingPipeline {
         return new MatOfPoint2f(points.toArray(new Point[0]));
     }
 
+    /**
+     * Converts a 2 dimensional double array into a MatOfPoint3f
+     * @param corners The 2 dimensional double array to be converted
+     * @return returns a MatOfPoint3f
+     */
     private static MatOfPoint3f doubleArrayToMatOfPoint3f(double[][] corners) {
         ArrayList<Point3> points = new ArrayList<Point3>();
         for (int i = 0; i < 8; i++) {

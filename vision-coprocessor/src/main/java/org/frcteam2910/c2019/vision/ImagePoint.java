@@ -5,25 +5,22 @@ import org.opencv.core.Point;
 public class ImagePoint implements Comparable<ImagePoint> {
     private double angle;
     private Point point;
-    private Point translatedPoint;
 
     /**
      * Default constructor
      */
     public ImagePoint() {
-        this(0.0, new Point(0.0, 0.0), new Point(0.0, 0.0));
+        this(0.0, new Point(0.0, 0.0));
     }
 
     /**
      * Main constructor
      * @param angle The angle between this point and it's right principal axis
      * @param point The point in pixel coordinates
-     * @param translatedPoint The previous point translated to a cartesian coordinate system, rotated and normalized
      */
-    public ImagePoint(double angle, Point point, Point translatedPoint) {
+    public ImagePoint(double angle, Point point) {
         this.angle = angle;
         this.point = point;
-        this.translatedPoint = translatedPoint;
     }
 
     /**
@@ -43,14 +40,6 @@ public class ImagePoint implements Comparable<ImagePoint> {
     }
 
     /**
-     * Return the point the translated point. This is the point which was been translated to a cartesian coordinate system, rotated, and normalized
-     * @return The translated point
-     */
-    public Point getTranslatedPoint() {
-        return translatedPoint;
-    }
-
-    /**
      * Set the angle for the Image Point. This is the angle between this point and it's right principal axis
      * @param angle
      */
@@ -66,16 +55,12 @@ public class ImagePoint implements Comparable<ImagePoint> {
         this.point = point;
     }
 
-    public void setTranslatedPoint(Point point) {
-        this.point = point;
-    }
-
     /**
      * Returns a string representation of this point for debugging purposes
      * @return A string representation of this point
      */
     public String toString() {
-        return point.toString() + ", " + translatedPoint.toString() + ", " + Math.toDegrees(angle);
+        return point.toString() + ", " + Math.toDegrees(angle);
     }
 
     /**

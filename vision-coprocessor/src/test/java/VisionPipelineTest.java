@@ -2,6 +2,8 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpiutil.RuntimeLoader;
 import org.frcteam2910.c2019.vision.VisionTargetingPipeline;
+import org.frcteam2910.c2019.vision.drivers.Limelight;
+import org.frcteam2910.common.math.RigidTransform2;
 import org.frcteam2910.common.math.Vector2;
 import org.opencv.core.*;
 
@@ -45,13 +47,13 @@ public class VisionPipelineTest {
         double[] dist = new double[] {3.15600348e-01, -1.17776987e+00, -9.30063427e-03, 1.46275541e-03, 1.61055001e+00};
 
         // Create an instance of our vision targeting pipeline
-        VisionTargetingPipeline pipeline = new VisionTargetingPipeline(table, objp, dist, mtx);
-        Vector2 translation;
+        VisionTargetingPipeline pipeline = new VisionTargetingPipeline(new Limelight(table), objp, dist, mtx);
+        RigidTransform2 transform;
 
         while (true) {
             try {
-                translation = pipeline.getTranslation();
-                System.out.println(translation.toString());
+                transform = pipeline.getTranslation();
+                System.out.println(transform.toString());
             } catch (Exception e) {
                 e.printStackTrace();
             }

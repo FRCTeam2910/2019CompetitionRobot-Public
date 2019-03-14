@@ -1,48 +1,48 @@
 package org.frcteam2910.c2019.subsystems;
 
-import com.revrobotics.CANDigitalInput;
-import com.revrobotics.CANSparkMax;
-import com.revrobotics.CANSparkMaxLowLevel;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.Solenoid;
 import org.frcteam2910.c2019.RobotMap;
-import org.frcteam2910.c2019.commands.HatchPlacerSoftIntakeCommand;
 import org.frcteam2910.common.robot.subsystems.Subsystem;
 
 public class HatchPlacerSubsystem extends Subsystem {
+    private static final double CAN_UPDATE_RATE = 50.0;
+
     private static final HatchPlacerSubsystem instance = new HatchPlacerSubsystem();
 
-    private static final double CAN_UPDATE_RATE = 50.0;
-    private static final double HATCH_PLACER_SOFT_INTAKE_SPEED = 0.1;
+    private Solenoid extenderSolenoid = new Solenoid(RobotMap.HATCH_EXTENDER_SOLENOID_MODULE,
+            RobotMap.HATCH_EXTENDER_SOLENOID_CHANNEL);
+    private Solenoid grabberSolenoid = new Solenoid(RobotMap.HATCH_GRABBER_SOLENOID_MODULE,
+            RobotMap.HATCH_GRABBER_SOLENOID_CHANNEL);
 
-    private final Object sensorLock = new Object();
-
-    private Solenoid hatchPlacerSolenoid = new Solenoid(RobotMap.HATCH_PLACER_SOLENOID_MODULE_NUMBER,RobotMap.HATCH_PLACER_SOLENOID_CHANNEL);   //TODO: Find Real Values
-    private CANSparkMax hatchPlacerMotor = new CANSparkMax(RobotMap.HATCH_PLACER_MOTOR, CANSparkMaxLowLevel.MotorType.kBrushless);
-    private CANDigitalInput hatchLimitSwitch = new CANDigitalInput(hatchPlacerMotor, CANDigitalInput.LimitSwitch.kForward, CANDigitalInput.LimitSwitchPolarity.kNormallyOpen);
-
-    private boolean isHatchPlacerExtended = false;
-    private boolean limitSwitchEnabled = false;
-    private double hatchPlacementMotorSpeed = 0;
-
+    private final Object canLock = new Object();
+    private boolean extendedChanged = true;
+    private boolean extended = false;
+    private boolean releasedChanged = true;
+    private boolean released = false;
 
     private Notifier canUpdateThread = new Notifier(() -> {
-        boolean hatchLimitSwitchEnabled = hatchLimitSwitch.get();
-        synchronized (sensorLock) {
-            limitSwitchEnabled = hatchLimitSwitchEnabled;
+        boolean localExtended;
+        boolean localExtendedChanged;
+        boolean localGrabbing;
+        boolean localGrabbingChanged;
+        synchronized (canLock) {
+            localExtended = extended;
+            localExtendedChanged = extendedChanged;
+            extendedChanged = false;
+
+            localGrabbing = released;
+            localGrabbingChanged = releasedChanged;
+            releasedChanged = false;
         }
 
-        boolean hatchPlacerExtended;
-        synchronized (sensorLock) {
-            hatchPlacerExtended = isHatchPlacerExtended;
+        if (localExtendedChanged) {
+            extenderSolenoid.set(localExtended);
         }
-        hatchPlacerSolenoid.set(hatchPlacerExtended);
 
-        double speed;
-        synchronized (sensorLock) {
-            speed = hatchPlacementMotorSpeed;
+        if (localGrabbingChanged) {
+            grabberSolenoid.set(localGrabbing);
         }
-        hatchPlacerMotor.set(speed);
     });
 
 
@@ -54,57 +54,43 @@ public class HatchPlacerSubsystem extends Subsystem {
         return instance;
     }
 
-    public boolean hasHatchPanel() {
-        synchronized (sensorLock) {
-            return limitSwitchEnabled;
+    public void extend() {
+        synchronized (canLock){
+            extendedChanged = !extended;
+            extended = true;
         }
     }
 
-    public void activatePlacerMotor(double speed) {
-//        if (hasHatchPanel() && speed > 0) {
-//            speed = 0;
-//        }
-
-        synchronized (sensorLock) {
-            hatchPlacementMotorSpeed = speed;
+    public void retract() {
+        synchronized (canLock) {
+            extendedChanged = extended;
+            extended = false;
         }
     }
 
-    public boolean getSolenoidPosition() {
-        synchronized (sensorLock) {
-            return isHatchPlacerExtended;
+    public void grab() {
+        synchronized (canLock) {
+            releasedChanged = released;
+            released = false;
         }
     }
 
-    public void retractPlacer() {
-        synchronized (sensorLock) {
-            isHatchPlacerExtended = false;
-        }
-    }
-
-    public void extendPlacer() {
-        synchronized (sensorLock){
-            isHatchPlacerExtended = true;
+    public void release() {
+        synchronized (canLock) {
+            releasedChanged = !released;
+            released = true;
         }
     }
 
     @Override
-    public void outputToSmartDashboard() {
-
-    }
+    public void outputToSmartDashboard() { }
 
     @Override
-    public void stop() {
-
-    }
+    public void stop() { }
 
     @Override
-    public void zeroSensors() {
-
-    }
+    public void zeroSensors() { }
 
     @Override
-    protected void initDefaultCommand() {
-        setDefaultCommand(new HatchPlacerSoftIntakeCommand(HATCH_PLACER_SOFT_INTAKE_SPEED));
-    }
+    protected void initDefaultCommand() { }
 }

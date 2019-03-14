@@ -16,6 +16,8 @@ application {
 }
 
 repositories {
+    mavenCentral()
+
     maven {
         url = 'http://first.wpi.edu/FRC/roborio/maven/release/'
     }
@@ -59,7 +61,7 @@ deploy {
 
 
 dependencies {
-    compile group: 'edu.wpi.first.wpiutil', name: 'wpiutil-java', version: '2019.1.1'
+    compile group: 'edu.wpi.first.wpiutil', name: 'wpiutil-java', version: '2019.3.1'
 
     compile group: 'edu.wpi.first.thirdparty.frc2019.opencv', name: 'opencv-java', version: '3.4.4-4'
     runtime group: 'edu.wpi.first.thirdparty.frc2019.opencv', name: 'opencv-jni', version: '3.4.4-4', classifier: 'linuxraspbian'
@@ -69,8 +71,8 @@ dependencies {
     runtime group: 'edu.wpi.first.thirdparty.frc2019.opencv', name: 'opencv-jni', version: '3.4.4-4', classifier: 'osxx86-64'
     runtime group: 'edu.wpi.first.thirdparty.frc2019.opencv', name: 'opencv-jni', version: '3.4.4-4', classifier: 'windowsx86-64'
 
-    compile group: 'edu.wpi.first.ntcore', name: 'ntcore-java', version: '2019.1.1'
-    runtime group: 'edu.wpi.first.ntcore', name: 'ntcore-jni', version: '2019.1.1', classifier: 'all'
+    compile group: 'edu.wpi.first.ntcore', name: 'ntcore-java', version: '2019.3.1'
+    runtime group: 'edu.wpi.first.ntcore', name: 'ntcore-jni', version: '2019.3.1', classifier: 'all'
 
     compile project(':common')
     compile project('api')

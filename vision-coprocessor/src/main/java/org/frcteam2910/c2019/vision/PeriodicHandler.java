@@ -21,6 +21,7 @@ public class PeriodicHandler implements Runnable {
     public void run() {
         while (!Thread.interrupted() && server.getSocket().isBound()) {
             try (VisionClient<Object, PeriodicPacket> connection = server.accept()) {
+                LOGGER.info("Client connected from IP: %s", connection.getSocket().getInetAddress().getHostName());
                 while (!Thread.interrupted() && connection.getSocket().isConnected()) {
                     PeriodicPacket packet = connection.receivePacket();
 
@@ -31,6 +32,7 @@ public class PeriodicHandler implements Runnable {
                             packet.getRotationalVelocity()
                     );
                 }
+                LOGGER.info("Connection to client (%s) was closed.", connection.getSocket().getInetAddress().getHostName());
             } catch (IOException e) {
                 LOGGER.error(e);
             }

@@ -4,40 +4,37 @@ public class RobotMap {
     public static final int GRABBER_TOP_MOTOR = 5;
     public static final int GRABBER_BOTTOM_MOTOR = 2;
 
-    public static final int ARM_LOWER_LIMIT_SWITCH_CHANNEL = 7; //TODO: FIND REAL VALUE
-    public static final int ARM_UPPER_LIMIT_SWITCH_CHANNEL = 8; //TODO: FIND REAL VALUE
-
     public static final int CARGO_ARM_ENCODER_PORT = 4;
 
-    public static final int HATCH_PLACER_MOTOR = 4;
-    public static final int HATCH_PLACER_SOLENOID_MODULE_NUMBER = 0;
-    public static final int HATCH_PLACER_SOLENOID_CHANNEL = 2;
+    public static final int HATCH_EXTENDER_SOLENOID_MODULE = 0;
+    public static final int HATCH_EXTENDER_SOLENOID_CHANNEL = 2;
+    public static final int HATCH_GRABBER_SOLENOID_MODULE = 0;
+    public static final int HATCH_GRABBER_SOLENOID_CHANNEL = 1;
 
     public static final int ARM_MOTOR_A = 9;
     public static final int ARM_MOTOR_B = 8;
 
-    public static final int CLIMBER_SOLENOID_MODULE_A = 0;
-    public static final int CLIMBER_SOLENOID_CHANNEL_A = 1;
-    public static final int CLIMBER_SOLENOID_MODULE_B = 0;
-    public static final int CLIMBER_SOLENOID_CHANNEL_B = 0;
+    public static final int CLIMBER_SOLENOID_MODULE = 0;
+    public static final int CLIMBER_SOLENOID_CHANNEL = 0;
+    public static final int KICKSTAND_SOLENOID_MODULE = 0;
+    public static final int KICKSTAND_SOLENOID_CHANNEL = 3;
+
+    public static final int HATCH_FLOOR_GATHERER_ARM_MOTOR = 1;
+    public static final int HATCH_FLOOR_GATHERER_FLOOR_MOTOR = 8;
 
     public static final int DRIVETRAIN_FRONT_LEFT_ANGLE_MOTOR = 4;
-    public static final double DRIVETRAIN_FRONT_LEFT_ANGLE_OFFSET = Math.toRadians(-223.0 + 180.0);
     public static final int DRIVETRAIN_FRONT_LEFT_ANGLE_ENCODER = 0;
     public static final int DRIVETRAIN_FRONT_LEFT_DRIVE_MOTOR = 10;
 
     public static final int DRIVETRAIN_FRONT_RIGHT_ANGLE_MOTOR = 7;
-    public static final double DRIVETRAIN_FRONT_RIGHT_ANGLE_OFFSET = Math.toRadians(-5.1);
     public static final int DRIVETRAIN_FRONT_RIGHT_ANGLE_ENCODER = 3;
     public static final int DRIVETRAIN_FRONT_RIGHT_DRIVE_MOTOR = 6;
     
     public static final int DRIVETRAIN_BACK_LEFT_ANGLE_MOTOR = 5;
-    public static final double DRIVETRAIN_BACK_LEFT_ANGLE_OFFSET = Math.toRadians(-357.0 + 180.0);
     public static final int DRIVETRAIN_BACK_LEFT_ANGLE_ENCODER = 1;
     public static final int DRIVETRAIN_BACK_LEFT_DRIVE_MOTOR = 9;
 
     public static final int DRIVETRAIN_BACK_RIGHT_ANGLE_MOTOR = 6;
-    public static final double DRIVETRAIN_BACK_RIGHT_ANGLE_OFFSET = Math.toRadians(-280.0);
     public static final int DRIVETRAIN_BACK_RIGHT_ANGLE_ENCODER = 2;
     public static final int DRIVETRAIN_BACK_RIGHT_DRIVE_MOTOR = 7;
 }

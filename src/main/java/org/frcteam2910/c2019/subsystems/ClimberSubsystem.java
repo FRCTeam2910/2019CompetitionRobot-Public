@@ -8,29 +8,40 @@ import org.frcteam2910.common.robot.subsystems.Subsystem;
 public class ClimberSubsystem extends Subsystem {
     private static final ClimberSubsystem instance = new ClimberSubsystem();
 
-    private Solenoid[] climberSolenoids = {
-            new Solenoid(RobotMap.CLIMBER_SOLENOID_MODULE_A, RobotMap.CLIMBER_SOLENOID_CHANNEL_A),
-            new Solenoid(RobotMap.CLIMBER_SOLENOID_MODULE_B, RobotMap.CLIMBER_SOLENOID_CHANNEL_B)
-    };
+    private Solenoid climberSolenoid = new Solenoid(RobotMap.CLIMBER_SOLENOID_MODULE,
+            RobotMap.CLIMBER_SOLENOID_CHANNEL);
+    private Solenoid kickstandSolenoid = new Solenoid(RobotMap.KICKSTAND_SOLENOID_MODULE,
+            RobotMap.KICKSTAND_SOLENOID_CHANNEL);
 
     private final Object canLock = new Object();
     private boolean climberStateChanged = false;
-    private boolean climberExtended = true;
+    private boolean climberExtended = false;
+    private boolean kickstandStateChanged = true;
+    private boolean kickstandExtended = false;
 
     private Notifier canUpdateThread = new Notifier(() -> {
         boolean localClimberStateChanged;
         boolean localClimberExtended;
+        boolean localKickstandStateChanged;
+        boolean localKickstandExtended;
 
         synchronized (canLock) {
             localClimberStateChanged = climberStateChanged;
             localClimberExtended = climberExtended;
             climberStateChanged = false;
+
+            localKickstandStateChanged = kickstandStateChanged;
+            localKickstandExtended = kickstandExtended;
+            kickstandStateChanged = false;
         }
 
         if (localClimberStateChanged) {
-            for (Solenoid solenoid : climberSolenoids) {
-                solenoid.set(localClimberExtended);
-            }
+            climberSolenoid.set(localClimberExtended);
+        }
+
+        // Kickstand is inverted
+        if (localKickstandStateChanged) {
+            kickstandSolenoid.set(!localKickstandExtended);
         }
     });
 
@@ -44,8 +55,22 @@ public class ClimberSubsystem extends Subsystem {
 
     public void setClimberExtended(boolean extended) {
         synchronized (canLock) {
-            climberStateChanged = true;
+            climberStateChanged = climberExtended != extended;
             climberExtended = extended;
+        }
+    }
+
+    public void extendKickstand() {
+        synchronized (canLock) {
+            kickstandStateChanged = !kickstandExtended;
+            kickstandExtended = true;
+        }
+    }
+
+    public void retractKickstand() {
+        synchronized (canLock) {
+            kickstandStateChanged = kickstandExtended;
+            kickstandExtended = false;
         }
     }
 

@@ -5,7 +5,9 @@ import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
 import edu.wpi.first.wpilibj.Notifier;
-import org.frcteam2910.c2019.commands.CargoPickupCommand;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import org.frcteam2910.c2019.commands.CargoGrabberDefaultCommand;
 import org.frcteam2910.common.robot.subsystems.Subsystem;
 import org.frcteam2910.c2019.RobotMap;
 
@@ -21,22 +23,41 @@ public class CargoGrabberSubsystem extends Subsystem {
     private double topMotorSpeed = 0;
 
     private final Object canLock = new Object();
+    private boolean cargoDetected = false;
+    private double topCurrent = 0.0;
+    private double lastCargoDetectionTime = 0.0;
 
     private final Notifier canThread = new Notifier(() -> {
+        double localTopCurrent = topMotor.getOutputCurrent();
+
         double bottomSpeed;
         double topSpeed;
         synchronized (canLock) {
             bottomSpeed = bottomMotorSpeed;
+            topSpeed = topMotorSpeed;
+            topCurrent = localTopCurrent;
         }
         bottomMotor.set(ControlMode.PercentOutput, bottomSpeed);
-        synchronized (canLock) {
-            topSpeed = topMotorSpeed;
-        }
         topMotor.set(topSpeed);
+
+        synchronized (canLock) {
+            // Beam break sensor is normally closed
+            cargoDetected = bottomMotor.getSensorCollection().isFwdLimitSwitchClosed();
+            if (cargoDetected) {
+                lastCargoDetectionTime = Timer.getFPGATimestamp();
+            }
+        }
     });
 
     private CargoGrabberSubsystem() {
-        topMotor.setSmartCurrentLimit(20);
+        topMotor.setSmartCurrentLimit(50);
+        topMotor.setInverted(true);
+
+        bottomMotor.configFactoryDefault();
+        bottomMotor.configForwardSoftLimitEnable(false);
+        bottomMotor.configReverseSoftLimitEnable(false);
+        bottomMotor.overrideLimitSwitchesEnable(false);
+        bottomMotor.setInverted(true);
 
         canThread.startPeriodic(CAN_THREAD_UPDATE_DURATION);
     }
@@ -47,7 +68,12 @@ public class CargoGrabberSubsystem extends Subsystem {
 
     @Override
     public void outputToSmartDashboard() {
-
+        SmartDashboard.putBoolean("Cargo Detected", hasCargo());
+        double localTopCurrent;
+        synchronized (canLock) {
+            localTopCurrent = topCurrent;
+        }
+        SmartDashboard.putNumber("Top Current", localTopCurrent);
     }
 
     @Override
@@ -57,7 +83,7 @@ public class CargoGrabberSubsystem extends Subsystem {
 
     public void setIntakeSpeed(double speed) {
         setTopIntakeSpeed(speed);
-        setBottomIntakeSpeed(-Math.abs(speed));
+        setBottomIntakeSpeed(speed);
     }
 
     public void setTopIntakeSpeed(double speed) {
@@ -72,6 +98,12 @@ public class CargoGrabberSubsystem extends Subsystem {
         }
     }
 
+    public boolean hasCargo() {
+        synchronized (canLock) {
+            return cargoDetected || (Timer.getFPGATimestamp() - lastCargoDetectionTime) < 0.25;
+        }
+    }
+
     @Override
     public void zeroSensors() {
 
@@ -79,6 +111,6 @@ public class CargoGrabberSubsystem extends Subsystem {
 
     @Override
     protected void initDefaultCommand() {
-        setDefaultCommand(new CargoPickupCommand(0.6));
+        setDefaultCommand(new CargoGrabberDefaultCommand());
     }
 }

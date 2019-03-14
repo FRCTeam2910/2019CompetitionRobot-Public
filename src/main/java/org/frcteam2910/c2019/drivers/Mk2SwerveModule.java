@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class Mk2SwerveModule extends SwerveModule {
     private static final double ANALOG_INPUT_MAX_VOLTAGE = 4.95;
     private static final PidConstants ANGLE_CONSTANTS = new PidConstants(0.5, 0.0, 0.0001);
-    private static final double DRIVE_TICKS_PER_INCH = (1.0 / 6.71) * (Math.PI * 4.0);
+    private static final double DRIVE_TICKS_PER_INCH = 0.707947;
 
     private static final double CAN_UPDATE_RATE = 50.0;
 

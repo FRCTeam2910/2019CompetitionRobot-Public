@@ -9,17 +9,16 @@ public class ImagePoint2019 extends ImagePoint {
      * Default constructor
      */
     public ImagePoint2019() {
-        this(0.0, new Point(0.0, 0.0), new Point(0.0, 0.0));
+        this(0.0, new Point(0.0, 0.0));
     }
 
     /**
      * Main constructor
      * @param angle Angle between this point and the horizontal
      * @param point The point represented in pixel coordinates
-     * @param translatedPoint The point translated and rotated into a normal cartesian coordinate system
      */
-    public ImagePoint2019(double angle, Point point, Point translatedPoint) {
-        super(angle, point, translatedPoint);
+    public ImagePoint2019(double angle, Point point) {
+        super(angle, point);
     }
 
     /**
@@ -35,44 +34,44 @@ public class ImagePoint2019 extends ImagePoint {
             return super.compareTo(other);
         }
         if ((0.0 < this.getAngle()) && (this.getAngle() < (Math.PI / 2))) {
-            if (this.getTranslatedPoint().x < other.getTranslatedPoint().x) {
+            if (this.getPoint().x < other.getPoint().x) {
                 // "this" is point 2
                 return 1;
             }
-            if (this.getTranslatedPoint().x > other.getTranslatedPoint().x) {
+            if (this.getPoint().x > other.getPoint().x) {
                 // "this" is point 1
                 return -1;
             }
             return 0;
         }
         if (((Math.PI / 2) < this.getAngle()) && (this.getAngle() < Math.PI)) {
-            if (this.getTranslatedPoint().x < other.getTranslatedPoint().x) {
+            if (this.getPoint().x < other.getPoint().x) {
                 // "this" is point 4
                 return 1;
             }
-            if (this.getTranslatedPoint().x > other.getTranslatedPoint().x) {
+            if (this.getPoint().x > other.getPoint().x) {
                 // "this" is point 3
                 return -1;
             }
             return 0;
         }
         if ((Math.PI < this.getAngle()) && (this.getAngle() < ((3 * Math.PI) / 2))) {
-            if (this.getTranslatedPoint().x < other.getTranslatedPoint().x) {
+            if (this.getPoint().x < other.getPoint().x) {
                 // "this" is point 5
                 return -1;
             }
-            if (this.getTranslatedPoint().x > other.getTranslatedPoint().x) {
+            if (this.getPoint().x > other.getPoint().x) {
                 // "this" is point 6
                 return 1;
             }
             return 0;
         }
         if ((((3 * Math.PI) / 2) < this.getAngle()) && (this.getAngle() < (2 * Math.PI))) {
-            if (this.getTranslatedPoint().x < other.getTranslatedPoint().x) {
+            if (this.getPoint().x < other.getPoint().x) {
                 // "this" is point 7
                 return -1;
             }
-            if (this.getTranslatedPoint().x > other.getTranslatedPoint().x) {
+            if (this.getPoint().x > other.getPoint().x) {
                 // "this" is point 8
                 return 1;
             }

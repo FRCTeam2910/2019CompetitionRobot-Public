@@ -7,6 +7,6 @@ public class ExtendHatchPlacerCommand extends InstantCommand {
 
 	@Override
 	protected void initialize() {
-		HatchPlacerSubsystem.getInstance().extendPlacer();
+		HatchPlacerSubsystem.getInstance().extend();
 	}
 }
