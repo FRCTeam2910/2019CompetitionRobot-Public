@@ -13,7 +13,7 @@ import org.frcteam2910.c2019.RobotMap;
 
 public class CargoArmSubsystem extends Subsystem {
     public static final double CARGO_SHIP_SCORE_ANGLE = Math.toRadians(100.0);
-    public static final double ROCKET_SCORE_ANGLE = Math.toRadians(62.0);
+    public static final double ROCKET_SCORE_ANGLE = Math.toRadians(63.0);
     public static final double BOTTOM_ANGLE = Math.toRadians(4.0);
 
     private static final double ANGLE_OFFSET_COMPETITION = Math.toRadians(-214.97);
@@ -24,7 +24,7 @@ public class CargoArmSubsystem extends Subsystem {
     private static final double MAX_ANGLE_PRACTICE = Math.toRadians(110.41971277880431);
 
     private static final double ENCODER_GEAR_RATIO = 24.0 / 54.0;
-    private static final double ALLOWABLE_TARGET_ANGLE_ERROR = Math.toRadians(2.0); // Allowable error range of 2 degrees
+    private static final double ALLOWABLE_TARGET_ANGLE_ERROR = Math.toRadians(4.0); // Allowable error range of 2 degrees
 
     private static final double ANGLE_FEEDFORWARD = 0.03;
 

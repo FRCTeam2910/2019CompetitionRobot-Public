@@ -27,7 +27,7 @@ public class DrivetrainSubsystem extends SwerveDrivetrain {
     private static final double WHEELBASE = 23.5;
 
     private static final double FRONT_LEFT_ANGLE_OFFSET_COMPETITION = Math.toRadians(-167.1 + 180);
-    private static final double FRONT_RIGHT_ANGLE_OFFSET_COMPETITION = Math.toRadians(-245.60 + 180);
+    private static final double FRONT_RIGHT_ANGLE_OFFSET_COMPETITION = Math.toRadians(-328.253 + 180);
     private static final double BACK_LEFT_ANGLE_OFFSET_COMPETITION = Math.toRadians(-170.8 + 180);
     private static final double BACK_RIGHT_ANGLE_OFFSET_COMPETITION = Math.toRadians(-3.41);
     private static final double FRONT_LEFT_ANGLE_OFFSET_PRACTICE = Math.toRadians(-223.0 + 180.0);

@@ -40,7 +40,7 @@ public class VisionTargetCommand extends Command {
         double time = Timer.getFPGATimestamp();
         double dt = time - lastTime;
 
-        double forward = Robot.getOi().primaryController.getLeftYAxis().get(true);
+        double forward = Robot.getOi().primaryController.getLeftYAxis().get(true) * 0.5;
         double strafe = controller.calculate(limelight.getTargetPosition().x, dt);
         double rotation = Robot.getOi().primaryController.getRightXAxis().get(true);
 

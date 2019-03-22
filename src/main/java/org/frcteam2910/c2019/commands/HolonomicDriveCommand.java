@@ -12,11 +12,6 @@ public class HolonomicDriveCommand extends Command {
     }
 
     @Override
-    protected void initialize() {
-        System.out.println("START");
-    }
-
-    @Override
     protected void execute() {
         double forward = Robot.getOi().primaryController.getLeftYAxis().get(true);
         double strafe = Robot.getOi().primaryController.getLeftXAxis().get(true);

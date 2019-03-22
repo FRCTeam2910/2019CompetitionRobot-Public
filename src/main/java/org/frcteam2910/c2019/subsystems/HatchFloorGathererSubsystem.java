@@ -21,11 +21,11 @@ public class HatchFloorGathererSubsystem extends Subsystem {
 
     private static final double ANGLE_ENCODER_TICKS_PER_REVOLUTION = 4096.0;
 
-    private static final double ANGLE_OFFSET_COMPETITION = Math.toRadians(-98.26);
-    private static final double ANGLE_OFFSET_PRACTICE = Math.toRadians(-174.462890625);
+    private static final double ANGLE_OFFSET_COMPETITION = Math.toRadians(-178.066);
+    private static final double ANGLE_OFFSET_PRACTICE = Math.toRadians(-159.52);
 
     private static final double MAX_ANGLE_COMPETITION = Math.toRadians(140.5);
-    private static final double MAX_ANGLE_PRACTICE = Math.toRadians(135.26);
+    private static final double MAX_ANGLE_PRACTICE = Math.toRadians(135.0);
 
     private static final double ANGLE_MAX_ROTATIONAL_VELOCITY = Math.toRadians(2.0 * 360.0);
     private static final double ANGLE_MAX_ROTATIONAL_ACCELERATION = Math.toRadians(100000.0);

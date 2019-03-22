@@ -41,8 +41,6 @@ public class OI {
 
         primaryController.getRightBumperButton().whenPressed(new SetArmAngleCommand(CargoArmSubsystem.getInstance().getMaxAngle()));
         primaryController.getRightBumperButton().whileHeld(new VisionTargetCommand(Gamepiece.HATCH_PANEL));
-        primaryController.getLeftBumperButton().whenPressed(new SetArmAngleCommand(CargoArmSubsystem.getInstance().getMaxAngle()));
-        primaryController.getLeftBumperButton().whileHeld(new VisionTargetCommand(Gamepiece.CARGO));
 
         primaryController.getDPadButton(DPadButton.Direction.UP).whenPressed(
                 new SetHatchFloorGathererAngleCommand(HatchFloorGathererSubsystem.getInstance().getMaxAngle()));
@@ -59,7 +57,7 @@ public class OI {
 
 
         // Cargo arm top position
-        secondaryController.getDPadButton(DPadButton.Direction.UP).whenPressed(new SetArmAngleCommand(
+        secondaryController.getDPadButton(DPadButton.Direction.UP).whileHeld(new SetArmAngleCommand(
                 CargoArmSubsystem.getInstance().getMaxAngle()));
         // Cargo arm cargo ship height
         secondaryController.getDPadButton(DPadButton.Direction.LEFT).whenPressed(

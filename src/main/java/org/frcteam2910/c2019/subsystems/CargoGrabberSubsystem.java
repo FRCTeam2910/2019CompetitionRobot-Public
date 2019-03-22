@@ -23,9 +23,11 @@ public class CargoGrabberSubsystem extends Subsystem {
     private double topMotorSpeed = 0;
 
     private final Object canLock = new Object();
-    private boolean cargoDetected = false;
+    private boolean leftCargoDetected = false;
+    private double leftCargoDetectionTime = 0.0;
+    private boolean rightCargoDetected = false;
+    private double rightCargoDetectionTime = 0.0;
     private double topCurrent = 0.0;
-    private double lastCargoDetectionTime = 0.0;
 
     private final Notifier canThread = new Notifier(() -> {
         double localTopCurrent = topMotor.getOutputCurrent();
@@ -42,15 +44,20 @@ public class CargoGrabberSubsystem extends Subsystem {
 
         synchronized (canLock) {
             // Beam break sensor is normally closed
-            cargoDetected = bottomMotor.getSensorCollection().isFwdLimitSwitchClosed();
-            if (cargoDetected) {
-                lastCargoDetectionTime = Timer.getFPGATimestamp();
+            leftCargoDetected = bottomMotor.getSensorCollection().isFwdLimitSwitchClosed();
+            if (leftCargoDetected) {
+                leftCargoDetectionTime = Timer.getFPGATimestamp();
+            }
+
+            rightCargoDetected = bottomMotor.getSensorCollection().isRevLimitSwitchClosed();
+            if (rightCargoDetected) {
+                rightCargoDetectionTime = Timer.getFPGATimestamp();
             }
         }
     });
 
     private CargoGrabberSubsystem() {
-        topMotor.setSmartCurrentLimit(50);
+        topMotor.setSmartCurrentLimit(40);
         topMotor.setInverted(true);
 
         bottomMotor.configFactoryDefault();
@@ -99,8 +106,18 @@ public class CargoGrabberSubsystem extends Subsystem {
     }
 
     public boolean hasCargo() {
+        return hasLeftCargo() && hasRightCargo();
+    }
+
+    public boolean hasLeftCargo() {
         synchronized (canLock) {
-            return cargoDetected || (Timer.getFPGATimestamp() - lastCargoDetectionTime) < 0.25;
+            return leftCargoDetected || (Timer.getFPGATimestamp() - leftCargoDetectionTime) < 0.25;
+        }
+    }
+
+    public boolean hasRightCargo() {
+        synchronized (canLock) {
+            return rightCargoDetected || (Timer.getFPGATimestamp() - rightCargoDetectionTime) < 0.25;
         }
     }
 
