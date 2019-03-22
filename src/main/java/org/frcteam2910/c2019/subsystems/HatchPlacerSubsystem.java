@@ -1,5 +1,6 @@
 package org.frcteam2910.c2019.subsystems;
 
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.Solenoid;
 import org.frcteam2910.c2019.RobotMap;
@@ -14,6 +15,9 @@ public class HatchPlacerSubsystem extends Subsystem {
             RobotMap.HATCH_EXTENDER_SOLENOID_CHANNEL);
     private Solenoid grabberSolenoid = new Solenoid(RobotMap.HATCH_GRABBER_SOLENOID_MODULE,
             RobotMap.HATCH_GRABBER_SOLENOID_CHANNEL);
+
+    private DigitalInput leftLimitSwitch = new DigitalInput(RobotMap.HATCH_GRABBER_LIMIT_SWITCH_LEFT);
+    private DigitalInput rightLimitSwitch = new DigitalInput(RobotMap.HATCH_GRABBER_LIMIT_SWITCH_RIGHT);
 
     private final Object canLock = new Object();
     private boolean extendedChanged = true;
@@ -80,6 +84,14 @@ public class HatchPlacerSubsystem extends Subsystem {
             releasedChanged = !released;
             released = true;
         }
+    }
+
+    public boolean getRightLimitSwitch() {
+        return !rightLimitSwitch.get();
+    }
+
+    public boolean getLeftLimitSwitch() {
+        return !leftLimitSwitch.get();
     }
 
     @Override

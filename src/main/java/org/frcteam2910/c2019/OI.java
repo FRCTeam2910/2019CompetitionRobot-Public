@@ -1,5 +1,6 @@
 package org.frcteam2910.c2019;
 
+import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.command.CommandGroup;
 import edu.wpi.first.wpilibj.command.WaitCommand;
 import org.frcteam2910.c2019.commands.*;
@@ -73,6 +74,15 @@ public class OI {
             group.addSequential(new ReleaseHatchPanelCommand());
             group.addSequential(new ExtendHatchPlacerCommand());
             secondaryController.getRightTriggerAxis().whenPressed(group);
+
+        }
+
+        {
+            CommandGroup group = new CommandGroup();
+            group.addParallel(new GrabOnHasHatchPanelCommand());
+            group.addSequential(new RumbleWhileHasHatchPanelCommand());
+            secondaryController.getRightTriggerAxis().whileHeld(group);
+
         }
         {
             CommandGroup group = new CommandGroup();
@@ -81,6 +91,7 @@ public class OI {
             group.addSequential(new RetractHatchPlacerCommand());
             secondaryController.getRightTriggerAxis().whenReleased(group);
         }
+
         secondaryController.getRightBumperButton().whileHeld(new GrabHatchFromFloorPart1Command());
         secondaryController.getRightBumperButton().whenReleased(new GrabHatchFromFloorPart2Command());
 
