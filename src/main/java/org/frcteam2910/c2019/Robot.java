@@ -2,6 +2,7 @@ package org.frcteam2910.c2019;
 
 import edu.wpi.cscore.MjpegServer;
 import edu.wpi.first.cameraserver.CameraServer;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.command.Scheduler;
@@ -10,6 +11,7 @@ import org.frcteam2910.c2019.commands.GotoTargetCommand;
 import org.frcteam2910.c2019.subsystems.*;
 import org.frcteam2910.c2019.vision.api.Gamepiece;
 import org.frcteam2910.common.math.Rotation2;
+import org.frcteam2910.common.robot.drivers.Limelight;
 import org.frcteam2910.common.robot.drivers.NavX;
 import org.frcteam2910.common.robot.subsystems.SubsystemManager;
 
@@ -43,6 +45,8 @@ public class Robot extends TimedRobot {
 
     @Override
     public void robotInit() {
+        SmartDashboard.putBoolean("Limelight Calibration Mode", false);
+
         subsystemManager.enableKinematicLoop(UPDATE_DT);
     }
 
@@ -58,6 +62,15 @@ public class Robot extends TimedRobot {
                 Superstructure.getInstance().isCompetitionBot());
         SmartDashboard.putBoolean("Is Practice Bot",
                 Superstructure.getInstance().isPracticeBot());
+    }
+
+    @Override
+    public void disabledPeriodic() {
+        boolean calibrationMode = SmartDashboard.getBoolean("Limelight Calibration Mode", false);
+
+        Limelight.CamMode mode = calibrationMode ? Limelight.CamMode.VISION : Limelight.CamMode.DRIVER;
+        VisionSubsystem.getInstance().getLimelight(Gamepiece.HATCH_PANEL).setCamMode(mode);
+        VisionSubsystem.getInstance().getLimelight(Gamepiece.CARGO).setCamMode(mode);
     }
 
     @Override
