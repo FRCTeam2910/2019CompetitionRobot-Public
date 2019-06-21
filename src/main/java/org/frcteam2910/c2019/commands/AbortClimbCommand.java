@@ -6,6 +6,5 @@ public class AbortClimbCommand extends CommandGroup {
     public AbortClimbCommand() {
         this.addParallel(new SetClimberExtendedCommand(false));
         this.addParallel(new SetBottomCargoRollerSpeedCommand(0.3));
-        this.addSequential(new CorrectPitchCommand(Math.toRadians(5.0), false));
     }
 }

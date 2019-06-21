@@ -14,9 +14,10 @@ import org.frcteam2910.c2019.RobotMap;
 public class CargoArmSubsystem extends Subsystem {
     public static final double CARGO_SHIP_SCORE_ANGLE = Math.toRadians(100.0);
     public static final double ROCKET_SCORE_ANGLE = Math.toRadians(63.0);
-    public static final double BOTTOM_ANGLE = Math.toRadians(4.0);
+    public static final double BOTTOM_ANGLE = Math.toRadians(2.0);
+    public static final double VISION_TARGET_ANGLE = Math.toRadians(95.0);
 
-    private static final double ANGLE_OFFSET_COMPETITION = Math.toRadians(-214.97);
+    private static final double ANGLE_OFFSET_COMPETITION = Math.toRadians(-207.87);
     private static final double ANGLE_OFFSET_PRACTICE = Math.toRadians(-212.11148939808933);
 
     // These really shouldn't be different but it is good to have so we can make sure we don't run into the hard stops.

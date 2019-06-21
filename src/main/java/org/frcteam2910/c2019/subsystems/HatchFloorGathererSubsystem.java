@@ -27,9 +27,6 @@ public class HatchFloorGathererSubsystem extends Subsystem {
     private static final double MAX_ANGLE_COMPETITION = Math.toRadians(140.5);
     private static final double MAX_ANGLE_PRACTICE = Math.toRadians(135.0);
 
-    private static final double ANGLE_MAX_ROTATIONAL_VELOCITY = Math.toRadians(2.0 * 360.0);
-    private static final double ANGLE_MAX_ROTATIONAL_ACCELERATION = Math.toRadians(100000.0);
-
     private static final double ANGLE_PID_P = 3.0;
     private static final double ANGLE_PID_I = 0.0075;
     private static final double ANGLE_PID_D = 10.0;
@@ -105,10 +102,6 @@ public class HatchFloorGathererSubsystem extends Subsystem {
         angleMotor.configReverseSoftLimitThreshold(convertAngleToEncoderTicks(maxAngle), Constants.CAN_TIMEOUT_MS);
         angleMotor.configReverseSoftLimitEnable(false, Constants.CAN_TIMEOUT_MS);
 
-//        angleMotor.configMotionCruiseVelocity((int) (ANGLE_MAX_ROTATIONAL_VELOCITY *
-//                (ANGLE_ENCODER_TICKS_PER_REVOLUTION / (2.0 * Math.PI)) * (100.0 / 1000.0)), Constants.CAN_TIMEOUT_MS);
-//        angleMotor.configMotionAcceleration((int) (ANGLE_MAX_ROTATIONAL_ACCELERATION *
-//                (ANGLE_ENCODER_TICKS_PER_REVOLUTION / (2.0 * Math.PI)) * (100.0 / 1000.0)), Constants.CAN_TIMEOUT_MS);
         angleMotor.configMotionCruiseVelocity(5000, Constants.CAN_TIMEOUT_MS);
         angleMotor.configMotionAcceleration(1500, Constants.CAN_TIMEOUT_MS);
 
@@ -136,8 +129,6 @@ public class HatchFloorGathererSubsystem extends Subsystem {
             }
 
             angleMotor.set(ControlMode.MotionMagic, angleTicksOutput);
-//            angleMotor.set(ControlMode.Disabled, 0.0);
-//            angleMotor.set(ControlMode.PercentOutput, Robot.getOi().controller.getRightYAxis().get());
             intakeMotor.set(intakeOutput);
         });
         canUpdateThread.startPeriodic(1.0 / CAN_UPDATE_RATE);

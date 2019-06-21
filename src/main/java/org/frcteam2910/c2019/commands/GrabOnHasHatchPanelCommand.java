@@ -5,7 +5,7 @@ import edu.wpi.first.wpilibj.command.Command;
 import org.frcteam2910.c2019.subsystems.HatchPlacerSubsystem;
 
 public class GrabOnHasHatchPanelCommand extends Command {
-    private double SIGNAL_LENGTH = 0.1;
+    private static final double SIGNAL_LENGTH = 0.1;
 
     private double lastSignalTime = Double.NaN;
 

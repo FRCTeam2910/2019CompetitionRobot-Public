@@ -1,16 +1,13 @@
 package org.frcteam2910.c2019;
 
-import edu.wpi.cscore.MjpegServer;
-import edu.wpi.first.cameraserver.CameraServer;
-import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.command.Scheduler;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import org.frcteam2910.c2019.commands.GotoTargetCommand;
+import org.frcteam2910.c2019.autonomous.AutonomousSelector;
+import org.frcteam2910.c2019.autonomous.AutonomousTrajectories;
 import org.frcteam2910.c2019.subsystems.*;
 import org.frcteam2910.c2019.vision.api.Gamepiece;
-import org.frcteam2910.common.math.Rotation2;
 import org.frcteam2910.common.robot.drivers.Limelight;
 import org.frcteam2910.common.robot.drivers.NavX;
 import org.frcteam2910.common.robot.subsystems.SubsystemManager;
@@ -30,13 +27,13 @@ public class Robot extends TimedRobot {
 
     private static final OI oi = new OI();
 
+    private AutonomousTrajectories autonomousTrajectories = new AutonomousTrajectories(DrivetrainSubsystem.CONSTRAINTS);
+    private AutonomousSelector autonomousSelector = new AutonomousSelector(autonomousTrajectories);
+
     private Command autonomousCommand = null;
 
     public Robot() {
-        oi.bindButtons();
-
-        MjpegServer hatch = CameraServer.getInstance().addServer("limelight-hatch", 5800);
-        CameraServer.getInstance().addServer("limelight-cargo", 5800);
+        oi.bindButtons(autonomousSelector);
     }
 
     public static OI getOi() {
@@ -65,15 +62,6 @@ public class Robot extends TimedRobot {
     }
 
     @Override
-    public void disabledPeriodic() {
-        boolean calibrationMode = SmartDashboard.getBoolean("Limelight Calibration Mode", false);
-
-        Limelight.CamMode mode = calibrationMode ? Limelight.CamMode.VISION : Limelight.CamMode.DRIVER;
-        VisionSubsystem.getInstance().getLimelight(Gamepiece.HATCH_PANEL).setCamMode(mode);
-        VisionSubsystem.getInstance().getLimelight(Gamepiece.CARGO).setCamMode(mode);
-    }
-
-    @Override
     public void teleopInit() {
         if (autonomousCommand != null) {
             autonomousCommand.cancel();
@@ -88,16 +76,17 @@ public class Robot extends TimedRobot {
 
     @Override
     public void autonomousInit() {
-        Superstructure.getInstance().getGyroscope().setAdjustmentAngle(
-                Superstructure.getInstance().getGyroscope().getUnadjustedAngle().rotateBy(Rotation2.fromDegrees(180.0))
-        );
+        if (autonomousCommand != null) {
+            autonomousCommand.cancel();
+        }
 
-        teleopInit();
+        autonomousCommand = autonomousSelector.getCommand();
+        autonomousCommand.start();
     }
 
     @Override
     public void autonomousPeriodic() {
-        teleopPeriodic();
+        Scheduler.getInstance().run();
     }
 
     @Override
@@ -107,5 +96,14 @@ public class Robot extends TimedRobot {
             autonomousCommand = null;
         }
         Scheduler.getInstance().removeAll();
+    }
+
+    @Override
+    public void disabledPeriodic() {
+        boolean calibrationMode = SmartDashboard.getBoolean("Limelight Calibration Mode", false);
+
+        Limelight.CamMode mode = calibrationMode ? Limelight.CamMode.VISION : Limelight.CamMode.DRIVER;
+        VisionSubsystem.getInstance().getLimelight(Gamepiece.HATCH_PANEL).setCamMode(mode);
+        VisionSubsystem.getInstance().getLimelight(Gamepiece.CARGO).setCamMode(mode);
     }
 }

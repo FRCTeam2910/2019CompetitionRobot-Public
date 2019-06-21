@@ -14,9 +14,8 @@ import org.frcteam2910.common.math.Vector2;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class Mk2SwerveModule extends SwerveModule {
-    private static final double ANALOG_INPUT_MAX_VOLTAGE = 4.95;
     private static final PidConstants ANGLE_CONSTANTS = new PidConstants(0.5, 0.0, 0.0001);
-    private static final double DRIVE_TICKS_PER_INCH = 0.707947;
+    private static final double DRIVE_TICKS_PER_INCH = 1.0 / (4.0 * Math.PI / 60.0 * 15.0 / 20.0 * 24.0 / 38.0 * 18.0); // 0.707947
 
     private static final double CAN_UPDATE_RATE = 50.0;
 
@@ -30,11 +29,23 @@ public class Mk2SwerveModule extends SwerveModule {
     private final Object canLock = new Object();
     private double driveEncoderTicks = 0.0;
     private double drivePercentOutput = 0.0;
+    private double driveVelocityRpm = 0.0;
+    private double driveCurrent = 0.0;
 
     private Notifier canUpdateNotifier = new Notifier(() -> {
         double driveEncoderTicks = driveEncoder.getPosition();
         synchronized (canLock) {
             Mk2SwerveModule.this.driveEncoderTicks = driveEncoderTicks;
+        }
+
+        double driveVelocityRpm = driveEncoder.getVelocity();
+        synchronized (canLock) {
+            Mk2SwerveModule.this.driveVelocityRpm = driveVelocityRpm;
+        }
+
+        double localDriveCurrent = driveMotor.getOutputCurrent();
+        synchronized (canLock) {
+            driveCurrent = localDriveCurrent;
         }
 
         double drivePercentOutput;
@@ -83,6 +94,34 @@ public class Mk2SwerveModule extends SwerveModule {
         }
 
         return driveEncoderTicks / DRIVE_TICKS_PER_INCH;
+    }
+
+    protected double readVelocity() {
+        double driveVelocityRpm;
+        synchronized (canLock) {
+            driveVelocityRpm = this.driveVelocityRpm;
+        }
+
+        return driveVelocityRpm * (1.0 / 60.0) / DRIVE_TICKS_PER_INCH;
+    }
+
+    protected double readDriveCurrent() {
+        double localDriveCurrent;
+        synchronized (canLock) {
+            localDriveCurrent = driveCurrent;
+        }
+
+        return localDriveCurrent;
+    }
+
+    @Override
+    public double getCurrentVelocity() {
+        return readVelocity();
+    }
+
+    @Override
+    public double getDriveCurrent() {
+        return readDriveCurrent();
     }
 
     @Override

@@ -7,12 +7,10 @@ import org.frcteam2910.common.robot.drivers.NavX;
 
 import java.io.IOException;
 import java.net.NetworkInterface;
-import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class Superstructure {
     private static final Logger LOGGER = new Logger(Superstructure.class);
@@ -33,6 +31,7 @@ public class Superstructure {
 
     private Superstructure() {
         navX.calibrate();
+        navX.setInverted(true);
 
         List<byte[]> macAddresses;
         try {
@@ -74,8 +73,7 @@ public class Superstructure {
     /**
      * Gets the MAC addresses of all present network adapters.
      *
-     * @return The MAC addresses of all network adapters
-     * @throws IOException
+     * @return the MAC addresses of all network adapters.
      */
     private static List<byte[]> getMacAddresses() throws IOException {
         List<byte[]> macAddresses = new ArrayList<>();

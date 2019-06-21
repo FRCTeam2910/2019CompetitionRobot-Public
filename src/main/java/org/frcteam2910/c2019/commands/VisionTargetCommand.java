@@ -13,7 +13,7 @@ import org.frcteam2910.common.math.Vector2;
 import org.frcteam2910.common.robot.drivers.Limelight;
 
 public class VisionTargetCommand extends Command {
-    private final PidController controller = new PidController(new PidConstants(1.0, 0.0, 1.0));
+    private final PidController controller = new PidController(new PidConstants(0.9, 0.0, 1.0));
 
     private final Limelight limelight;
     private final boolean flipRobotOriented;
@@ -32,7 +32,6 @@ public class VisionTargetCommand extends Command {
         lastTime = Timer.getFPGATimestamp();
 
         limelight.setCamMode(Limelight.CamMode.VISION);
-//        limelight.setLedMode(Limelight.LedMode.DEFAULT);
     }
 
     @Override
@@ -40,9 +39,23 @@ public class VisionTargetCommand extends Command {
         double time = Timer.getFPGATimestamp();
         double dt = time - lastTime;
 
-        double forward = Robot.getOi().primaryController.getLeftYAxis().get(true) * 0.5;
-        double strafe = controller.calculate(limelight.getTargetPosition().x, dt);
+        double scalar = 0.15;
+        if (Robot.getOi().secondaryController.getRightTriggerAxis().get() > 0.1) {
+            scalar = 0.3;
+        }
+
+        double forward = Robot.getOi().primaryController.getLeftYAxis().get(true) * scalar;
+        double strafe;
+        if (limelight.hasTarget() && Math.abs(Robot.getOi().primaryController.getLeftXAxis().get(false)) < 0.75) {
+            strafe = controller.calculate(limelight.getTargetPosition().x, dt);
+        } else {
+            strafe = Robot.getOi().primaryController.getLeftXAxis().get(true) * scalar;
+        }
         double rotation = Robot.getOi().primaryController.getRightXAxis().get(true);
+        if (Robot.getOi().secondaryController.getRightTriggerAxis().get() > 0.1) {
+            rotation = 0.0;
+            DrivetrainSubsystem.getInstance().setSnapRotation(0.0);
+        }
 
         Vector2 translation = new Vector2(forward, strafe);
         if (flipRobotOriented) {
@@ -55,9 +68,6 @@ public class VisionTargetCommand extends Command {
     @Override
     protected void end() {
         limelight.setCamMode(Limelight.CamMode.DRIVER);
-        limelight.setLedMode(Limelight.LedMode.ON);
-
-        System.out.println("END");
     }
 
     @Override
