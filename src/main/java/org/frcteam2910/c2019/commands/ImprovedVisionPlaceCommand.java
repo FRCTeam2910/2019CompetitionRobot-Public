@@ -65,6 +65,12 @@ public class ImprovedVisionPlaceCommand extends Command {
     private static final int FINISH_SUCCESSES_NEEDED = 4;
     private static final double TARGET_ANGLE_ACCEPTABLE_ERROR = Math.toRadians(5.0);
 
+    private static final int HIGH_RESOLUTION_HEIGHT = 720;
+    private static final int LOW_RESOLUTION_HEIGHT = 240;
+
+    private static final int HIGH_RESOLUTION_PIPELINE = 9;
+    private static final int LOW_RESOLUTION_PIPELINE = 8;
+
     private static NetworkTableEntry shouldSnapToAngleEntry;
     private static NetworkTableEntry pickupFromAnyTargetEntry;
 
@@ -93,11 +99,10 @@ public class ImprovedVisionPlaceCommand extends Command {
 
     static {
         ShuffleboardTab tab = Shuffleboard.getTab("Vision");
-        shouldSnapToAngleEntry = tab.add("Snap to Angle", true)
+        shouldSnapToAngleEntry = tab.add("Snap to Angle", false)
                 .withWidget(BuiltInWidgets.kToggleButton).getEntry();
         pickupFromAnyTargetEntry = tab.add("Pickup From Any Target", false)
                 .withWidget(BuiltInWidgets.kToggleButton).getEntry();
-
     }
 
     public ImprovedVisionPlaceCommand(double maxForwardSpeed, BiFunction<Double, Double, Boolean> finishCondition) {
@@ -127,7 +132,11 @@ public class ImprovedVisionPlaceCommand extends Command {
         controller.reset();
 
         limelight.setCamMode(Limelight.CamMode.VISION);
-        limelight.setPipeline(9);
+        if (shouldSnapToAngleEntry.getBoolean(false)) {
+            limelight.setPipeline(HIGH_RESOLUTION_PIPELINE);
+        } else {
+            limelight.setPipeline(LOW_RESOLUTION_PIPELINE);
+        }
         targetAngle = null;
         foundTarget = false;
         lockOnTargetTriesLeft = LOCK_ON_TARGET_TRIES;
@@ -204,10 +213,14 @@ public class ImprovedVisionPlaceCommand extends Command {
             }
         } else {
             // We can see a target
-            Rotation2 targetYawOffset = Rotation2.fromDegrees(targetTransform[4]);
 
             {
-                double theta = limelight.getTable().getEntry("tvert").getDouble(0.0) * Math.toRadians(49.7) / 720;
+                double theta;
+                if (shouldSnapToAngleEntry.getBoolean(false)) {
+                    theta = limelight.getTable().getEntry("tvert").getDouble(0.0) * Math.toRadians(49.7) / HIGH_RESOLUTION_HEIGHT;
+                } else {
+                    theta = limelight.getTable().getEntry("tvert").getDouble(0.0) * Math.toRadians(49.7) / LOW_RESOLUTION_HEIGHT;
+                }
                 distance = 5.83 / (2 * Math.tan(theta / 2));
 
                 robotOrientedPositionOffset = Vector2.fromAngle(Rotation2.fromRadians(limelight.getTargetPosition().x)).scale(distance);
@@ -220,11 +233,10 @@ public class ImprovedVisionPlaceCommand extends Command {
             }
             averageRobotYOffset.add(robotOrientedPositionOffset.y);
 
-            Rotation2 fieldOrientedTargetRotation = Superstructure.getInstance().getGyroscope().getAngle()
-                    .rotateBy(targetYawOffset.inverse());
-
             if (!foundTarget && shouldSnapToAngleEntry.getBoolean(true)) {
-                limelight.setPipeline(9);
+                Rotation2 targetYawOffset = Rotation2.fromDegrees(targetTransform[4]);
+                Rotation2 fieldOrientedTargetRotation = Superstructure.getInstance().getGyroscope().getAngle()
+                        .rotateBy(targetYawOffset.inverse());
 
                 Rotation2 bestTarget = null;
 

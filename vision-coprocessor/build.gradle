@@ -10,6 +10,7 @@ plugins {
 }
 
 sourceCompatibility = JavaVersion.VERSION_11
+targetCompatibility = JavaVersion.VERSION_11
 
 application {
     mainClassName = "org.frcteam2910.c2019.vision.Main"
