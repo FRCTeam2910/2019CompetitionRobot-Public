@@ -49,10 +49,12 @@ public class Robot extends TimedRobot {
 
     @Override
     public void robotPeriodic() {
-//        subsystemManager.outputToSmartDashboard();
+        subsystemManager.outputToSmartDashboard();
 
         SmartDashboard.putNumber("Arm Angle",
                 Math.toDegrees(CargoArmSubsystem.getInstance().getCurrentAngle()));
+        SmartDashboard.putNumber("Robot Angle",
+                Superstructure.getInstance().getGyroscope().getAngle().toDegrees());
         SmartDashboard.putNumber("Gyro Pitch",
                 Math.toDegrees(Superstructure.getInstance().getGyroscope().getAxis(NavX.Axis.ROLL)));
         SmartDashboard.putBoolean("Is Competition Bot",
@@ -63,10 +65,10 @@ public class Robot extends TimedRobot {
 
     @Override
     public void teleopInit() {
-        if (autonomousCommand != null) {
-            autonomousCommand.cancel();
-            autonomousCommand = null;
-        }
+//        if (autonomousCommand != null) {
+//            autonomousCommand.cancel();
+//            autonomousCommand = null;
+//        }
     }
 
     @Override
@@ -91,11 +93,11 @@ public class Robot extends TimedRobot {
 
     @Override
     public void disabledInit() {
-        if (autonomousCommand != null) {
-            autonomousCommand.cancel();
-            autonomousCommand = null;
-        }
-        Scheduler.getInstance().removeAll();
+//        if (autonomousCommand != null) {
+//            autonomousCommand.cancel();
+//            autonomousCommand = null;
+//        }
+//        Scheduler.getInstance().removeAll();
     }
 
     @Override
@@ -104,6 +106,7 @@ public class Robot extends TimedRobot {
 
         Limelight.CamMode mode = calibrationMode ? Limelight.CamMode.VISION : Limelight.CamMode.DRIVER;
         VisionSubsystem.getInstance().getLimelight(Gamepiece.HATCH_PANEL).setCamMode(mode);
+        VisionSubsystem.getInstance().getLimelight(Gamepiece.HATCH_PANEL).setPipeline(9);
         VisionSubsystem.getInstance().getLimelight(Gamepiece.CARGO).setCamMode(mode);
     }
 }

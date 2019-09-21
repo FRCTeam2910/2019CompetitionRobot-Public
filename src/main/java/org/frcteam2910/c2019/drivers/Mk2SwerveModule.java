@@ -2,6 +2,7 @@ package org.frcteam2910.c2019.drivers;
 
 import com.revrobotics.CANEncoder;
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkMaxLowLevel;
 import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
@@ -17,7 +18,7 @@ public class Mk2SwerveModule extends SwerveModule {
     private static final PidConstants ANGLE_CONSTANTS = new PidConstants(0.5, 0.0, 0.0001);
     private static final double DRIVE_TICKS_PER_INCH = 1.0 / (4.0 * Math.PI / 60.0 * 15.0 / 20.0 * 24.0 / 38.0 * 18.0); // 0.707947
 
-    private static final double CAN_UPDATE_RATE = 50.0;
+    private static final double CAN_UPDATE_RATE = 200.0;
 
     private final double angleOffset;
 
@@ -67,6 +68,8 @@ public class Mk2SwerveModule extends SwerveModule {
         this.driveEncoder = new CANEncoder(driveMotor);
 
         driveMotor.setSmartCurrentLimit(60);
+        driveMotor.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus0, 500);
+        driveMotor.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus2, 3);
 
         angleController.setInputRange(0.0, 2.0 * Math.PI);
         angleController.setContinuous(true);

@@ -2,19 +2,13 @@ package org.frcteam2910.c2019;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
-import edu.wpi.first.wpilibj.command.Command;
-import edu.wpi.first.wpilibj.command.CommandGroup;
-import edu.wpi.first.wpilibj.command.ConditionalCommand;
-import edu.wpi.first.wpilibj.command.WaitCommand;
+import edu.wpi.first.wpilibj.command.*;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import org.frcteam2910.c2019.autonomous.AutonomousSelector;
 import org.frcteam2910.c2019.commands.*;
-import org.frcteam2910.c2019.subsystems.CargoArmSubsystem;
-import org.frcteam2910.c2019.subsystems.CargoGrabberSubsystem;
-import org.frcteam2910.c2019.subsystems.DrivetrainSubsystem;
-import org.frcteam2910.c2019.subsystems.HatchFloorGathererSubsystem;
+import org.frcteam2910.c2019.subsystems.*;
 import org.frcteam2910.c2019.vision.api.Gamepiece;
 import org.frcteam2910.common.robot.commands.ZeroFieldOrientedCommand;
 import org.frcteam2910.common.robot.input.DPadButton;
@@ -29,7 +23,7 @@ public class OI {
         primaryController.getLeftXAxis().setInverted(true);
         primaryController.getRightXAxis().setInverted(true);
 
-        primaryController.getRightXAxis().setScale(0.75);
+        primaryController.getRightXAxis().setScale(0.45);
     }
 
     public void bindButtons(AutonomousSelector autonomousSelector) {
@@ -37,23 +31,40 @@ public class OI {
         {
             CommandGroup group = new CommandGroup();
             group.addSequential(new ReleaseHatchPanelCommand());
-            group.addSequential(new WaitCommand(0.1));
+            group.addSequential(new InstantCommand(() -> HatchPlacerSubsystem.getInstance().extendPlacer()));
+            group.addSequential(new WaitCommand(0.25));
             group.addSequential(new RetractHatchPlacerCommand());
+            group.addSequential(new InstantCommand(() -> HatchPlacerSubsystem.getInstance().retractPlacer()));
             primaryController.getRightTriggerAxis().whenReleased(group);
         }
 
-        primaryController.getAButton().whenPressed(new SetClimberExtendedCommand(true));
-        primaryController.getAButton().whenReleased(new SetClimberExtendedCommand(false));
+//        primaryController.getAButton().whenPressed(new SetClimberExtendedCommand(true));
+//        primaryController.getAButton().whenReleased(new SetClimberExtendedCommand(false));
+        primaryController.getAButton().whileHeld(new SetRobotPitchCommand(Math.toRadians(12.0)));
 
-        primaryController.getRightBumperButton().whenPressed(new SetArmAngleCommand(CargoArmSubsystem.VISION_TARGET_ANGLE));
-        primaryController.getRightBumperButton().whileHeld(new VisionTargetCommand(Gamepiece.HATCH_PANEL));
-        primaryController.getRightBumperButton().whenReleased(new ConditionalCommand(
-                new FollowTrajectoryCommand(autonomousSelector.getTrajectoryQueue()::remove)
-        ) {
+        primaryController.getLeftBumperButton().whenPressed(new SetArmAngleCommand(CargoArmSubsystem.VISION_TARGET_ANGLE));
+        primaryController.getLeftBumperButton().whileHeld(new VisionTargetCommand(Gamepiece.HATCH_PANEL));
+        primaryController.getLeftBumperButton().whenReleased(new ConditionalCommand(new InstantCommand(() -> {
+            autonomousSelector.getHybridQueue().remove().start();
+        })) {
             @Override
             protected boolean condition() {
-                System.out.printf("Checking %d%n", autonomousSelector.getTrajectoryQueue().size());
-                return DriverStation.getInstance().isAutonomous() && !autonomousSelector.getTrajectoryQueue().isEmpty();
+                System.out.printf("Checking %d%n", autonomousSelector.getHybridQueue().size());
+                return DriverStation.getInstance().isAutonomous() && !autonomousSelector.getHybridQueue().isEmpty();
+            }
+        });
+
+        Command doTheThingCommand = new DoTheThingCommand();
+        primaryController.getRightBumperButton().whenPressed(doTheThingCommand);
+        primaryController.getRightBumperButton().whenReleased(new RetractHatchPlacerCommand());
+        primaryController.getRightBumperButton().whenReleased(new InstantCommand(doTheThingCommand::cancel));
+        primaryController.getRightBumperButton().whenReleased(new ConditionalCommand(new InstantCommand(() -> {
+            autonomousSelector.getHybridQueue().remove().start();
+        })) {
+            @Override
+            protected boolean condition() {
+                System.out.printf("Checking %d%n", autonomousSelector.getHybridQueue().size());
+                return DriverStation.getInstance().isAutonomous() && !autonomousSelector.getHybridQueue().isEmpty();
             }
         });
 
@@ -67,29 +78,40 @@ public class OI {
         primaryController.getBackButton().whenPressed(new ZeroFieldOrientedCommand(DrivetrainSubsystem.getInstance()));
 
         // Climbing
-        primaryController.getStartButton().whenPressed(new ConditionalCommand(new OverhangCommand(), new ClimbCommand()) {
-            private SendableChooser<Boolean> climbModeSendable = new SendableChooser<>();
+        primaryController.getStartButton().whenPressed(new InstantCommand(new Runnable(){
+            private SendableChooser<Integer> climbModeSendable = new SendableChooser<>();
 
             {
                 ShuffleboardTab climbTab = Shuffleboard.getTab("Climbing");
 
                 climbModeSendable.setName("Climb Mode");
-                climbModeSendable.setDefaultOption("Normal", false);
-                climbModeSendable.addOption("Overhang", true);
+                climbModeSendable.setDefaultOption("Normal", 0);
+                climbModeSendable.addOption("Overhang", 1);
+                climbModeSendable.addOption("MadTown", 2);
                 climbTab.add(climbModeSendable);
             }
 
             @Override
-            protected boolean condition() {
-                return climbModeSendable.getSelected();
+            public void run() {
+                switch (climbModeSendable.getSelected()) {
+                    case 0:
+                        new ClimbCommand().start();
+                        break;
+                    case 1:
+                        new OverhangCommand(Math.toRadians(80.0), false).start();
+                        break;
+                    case 2:
+                        new OverhangCommand(CargoArmSubsystem.getInstance().getMaxAngle(), true).start();
+                        break;
+                }
             }
-        });
+        }));
         primaryController.getStartButton().whenReleased(new AbortClimbCommand());
 
 
         // Cargo arm top position
-        secondaryController.getDPadButton(DPadButton.Direction.UP).whileHeld(new SetArmAngleCommand(
-                CargoArmSubsystem.getInstance().getMaxAngle()));
+        secondaryController.getDPadButton(DPadButton.Direction.UP).whenPressed(
+                new SetArmAngleCommand(CargoArmSubsystem.CARGO_SHIP_SCORE_ANGLE));
         // Cargo arm cargo ship height
         secondaryController.getDPadButton(DPadButton.Direction.LEFT).whenPressed(
                 new SetArmAngleCommand(CargoArmSubsystem.CARGO_SHIP_SCORE_ANGLE));

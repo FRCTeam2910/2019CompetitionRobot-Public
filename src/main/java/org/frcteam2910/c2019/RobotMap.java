@@ -10,6 +10,8 @@ public class RobotMap {
     public static final int HATCH_EXTENDER_SOLENOID_CHANNEL = 2;
     public static final int HATCH_GRABBER_SOLENOID_MODULE = 0;
     public static final int HATCH_GRABBER_SOLENOID_CHANNEL = 1;
+    public static final int HATCH_PLACER_SOLENOID_MODULE = 0;
+    public static final int HATCH_PLACER_SOLENOID_CHANNEL = 4;
 
     public static final int HATCH_GRABBER_LIMIT_SWITCH_LEFT = 0;
     public static final int HATCH_GRABBER_LIMIT_SWITCH_RIGHT = 1;

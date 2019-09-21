@@ -6,5 +6,7 @@ import org.frcteam2910.c2019.subsystems.HatchPlacerSubsystem;
 public class GrabHatchPanelCommand extends InstantCommand {
     public GrabHatchPanelCommand() {
         super(() -> HatchPlacerSubsystem.getInstance().grab());
+
+        this.setRunWhenDisabled(true);
     }
 }

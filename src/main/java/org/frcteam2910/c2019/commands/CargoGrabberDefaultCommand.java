@@ -20,11 +20,17 @@ public class CargoGrabberDefaultCommand extends Command {
 
     private static final double INTAKE_AFTER_EJECT_TIME = 2.5;
 
+    private static final double INTAKE_AFTER_EJECT_SPEED_TOP = 0.7;
+    private static final double INTAKE_AFTER_EJECT_SPEED_BOTTOM = 0.0;
+
     private static final double INTAKE_SPEED_TOP = 0.7;
     private static final double INTAKE_SPEED_BOTTOM = 0.5;
 
-    private static final double SOFT_INTAKE_SPEED_TOP = 0.6;
-    private static final double SOFT_INTAKE_SPEED_BOTTOM = 0.5;
+    private static final double CENTERING_INTAKE_SPEED_TOP = 0.6;
+    private static final double CENTERING_INTAKE_SPEED_BOTTOM = 0.5;
+
+    private static final double SOFT_INTAKE_SPEED_TOP = 0.06;
+    private static final double SOFT_INTAKE_SPEED_BOTTOM = 0.0;
 
     private final Timer timer = new Timer();
 
@@ -59,19 +65,29 @@ public class CargoGrabberDefaultCommand extends Command {
             }
 
             timer.reset();
-        } else if (Robot.getOi().secondaryController.getLeftTriggerAxis().get() > 0.1 ||
-                timer.get() < INTAKE_AFTER_EJECT_TIME) {
+        } else if (CargoArmSubsystem.getInstance().isWithinTargetAngleRange(CargoArmSubsystem.BOTTOM_ANGLE)) {
             CargoGrabberSubsystem.getInstance().setTopIntakeSpeed(INTAKE_SPEED_TOP);
             CargoGrabberSubsystem.getInstance().setBottomIntakeSpeed(INTAKE_SPEED_BOTTOM);
-        } else if (CargoGrabberSubsystem.getInstance().hasCargo()) {
-            CargoGrabberSubsystem.getInstance().setTopIntakeSpeed(0.06);
-            CargoGrabberSubsystem.getInstance().setBottomIntakeSpeed(0.0);
         } else if (CargoGrabberSubsystem.getInstance().hasLeftCargo() ||
                 CargoGrabberSubsystem.getInstance().hasRightCargo()) {
-            CargoGrabberSubsystem.getInstance().setTopIntakeSpeed(SOFT_INTAKE_SPEED_TOP);
-            CargoGrabberSubsystem.getInstance().setBottomIntakeSpeed(SOFT_INTAKE_SPEED_BOTTOM);
+            if (!CargoArmSubsystem.getInstance().isWithinTargetAngleRange(CargoArmSubsystem.getInstance().getTargetAngle())) {
+                CargoGrabberSubsystem.getInstance().setTopIntakeSpeed(INTAKE_SPEED_TOP);
+                CargoGrabberSubsystem.getInstance().setBottomIntakeSpeed(INTAKE_SPEED_BOTTOM);
+            } else if (CargoGrabberSubsystem.getInstance().hasCargo()) {
+                CargoGrabberSubsystem.getInstance().setTopIntakeSpeed(SOFT_INTAKE_SPEED_TOP);
+                CargoGrabberSubsystem.getInstance().setBottomIntakeSpeed(SOFT_INTAKE_SPEED_BOTTOM);
+            } else  {
+                CargoGrabberSubsystem.getInstance().setTopIntakeSpeed(CENTERING_INTAKE_SPEED_TOP);
+                CargoGrabberSubsystem.getInstance().setBottomIntakeSpeed(CENTERING_INTAKE_SPEED_BOTTOM);
+            }
+        } else if (Robot.getOi().secondaryController.getLeftTriggerAxis().get() > 0.1) {
+            CargoGrabberSubsystem.getInstance().setTopIntakeSpeed(INTAKE_SPEED_TOP);
+            CargoGrabberSubsystem.getInstance().setBottomIntakeSpeed(INTAKE_SPEED_BOTTOM);
+        } else if (timer.get() < INTAKE_AFTER_EJECT_TIME) {
+            CargoGrabberSubsystem.getInstance().setTopIntakeSpeed(INTAKE_AFTER_EJECT_SPEED_TOP);
+            CargoGrabberSubsystem.getInstance().setBottomIntakeSpeed(INTAKE_AFTER_EJECT_SPEED_BOTTOM);
         } else {
-                CargoGrabberSubsystem.getInstance().setIntakeSpeed(0.0);
+            CargoGrabberSubsystem.getInstance().setIntakeSpeed(0.0);
         }
     }
 

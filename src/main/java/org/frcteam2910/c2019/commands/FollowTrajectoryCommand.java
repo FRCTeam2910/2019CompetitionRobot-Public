@@ -23,6 +23,7 @@ public class FollowTrajectoryCommand extends Command {
         this.trajectorySupplier = trajectorySupplier;
 
         requires(DrivetrainSubsystem.getInstance());
+        this.setRunWhenDisabled(true);
     }
 
     @Override
@@ -47,6 +48,7 @@ public class FollowTrajectoryCommand extends Command {
 
     @Override
     protected void interrupted() {
+        end();
         DrivetrainSubsystem.getInstance().getFollower().cancel();
     }
 

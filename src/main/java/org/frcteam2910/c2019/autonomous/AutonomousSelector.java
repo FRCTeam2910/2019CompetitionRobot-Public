@@ -4,12 +4,13 @@ import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.command.CommandGroup;
 import edu.wpi.first.wpilibj.command.InstantCommand;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import org.frcteam2910.c2019.commands.DoTheThingCommand;
 import org.frcteam2910.c2019.commands.FollowTrajectoryCommand;
 import org.frcteam2910.c2019.subsystems.DrivetrainSubsystem;
-import org.frcteam2910.common.control.Trajectory;
 import org.frcteam2910.common.math.Rotation2;
 import org.frcteam2910.common.util.Side;
 
@@ -19,16 +20,16 @@ import java.util.Queue;
 public class AutonomousSelector {
     private final AutonomousTrajectories trajectories;
 
-    private SendableChooser<Side> sideChooser;
-    private SendableChooser<Rotation2> orientationChooser;
-    private SendableChooser<AutonomousMode> autonomousModeChooser;
-    private NetworkTableEntry onHab2Entry;
+    private static SendableChooser<Side> sideChooser;
+    private static SendableChooser<Rotation2> orientationChooser;
+    private static SendableChooser<AutonomousMode> autonomousModeChooser;
+    private static NetworkTableEntry onHab2Entry;
+    private static NetworkTableEntry placeThirdPanelEntry;
+    private static NetworkTableEntry placeFourthPanelEntry;
 
-    private Queue<Trajectory> hybridTrajectoryQueue = new LinkedList<>();
+    private Queue<Command> hybridCommandQueue = new LinkedList<>();
 
-    public AutonomousSelector(AutonomousTrajectories trajectories) {
-        this.trajectories = trajectories;
-
+    static {
         ShuffleboardTab sandstormTab = Shuffleboard.getTab("Sandstorm settings");
 
         sideChooser = new SendableChooser<>();
@@ -45,10 +46,23 @@ public class AutonomousSelector {
 
         autonomousModeChooser = new SendableChooser<>();
         autonomousModeChooser.setDefaultOption("Driven", AutonomousMode.DRIVEN);
+        autonomousModeChooser.addOption("Hybrid", AutonomousMode.HYBRID);
         autonomousModeChooser.addOption("Autonomous", AutonomousMode.AUTONOMOUS);
         sandstormTab.add("Mode", autonomousModeChooser);
 
-        onHab2Entry = sandstormTab.add("On HAB 2", false).getEntry();
+        onHab2Entry = sandstormTab.add("On HAB 2", false)
+                .withWidget(BuiltInWidgets.kToggleButton)
+                .getEntry();
+        placeThirdPanelEntry = sandstormTab.add("Place 3rd Hatch", false)
+                .withWidget(BuiltInWidgets.kToggleButton)
+                .getEntry();
+        placeFourthPanelEntry = sandstormTab.add("Place 4th Hatch", false)
+                .withWidget(BuiltInWidgets.kToggleButton)
+                .getEntry();
+    }
+
+    public AutonomousSelector(AutonomousTrajectories trajectories) {
+        this.trajectories = trajectories;
     }
 
     public Command getCommand() {
@@ -58,6 +72,7 @@ public class AutonomousSelector {
         boolean onHab2 = onHab2Entry.getBoolean(false);
 
         CommandGroup group = new CommandGroup();
+        group.setRunWhenDisabled(true);
 
         // Set the gyro angle to the correct starting angle
         group.addSequential(new InstantCommand(() -> {
@@ -79,23 +94,81 @@ public class AutonomousSelector {
             group.addSequential(new FollowTrajectoryCommand(trajectories.getHab1ToCargoSideNearTrajectory(startingSide)));
         }
         // Enqueue the next trajectories
-        hybridTrajectoryQueue.clear();
+        hybridCommandQueue.clear();
         // First we want to go to the loading station
-        hybridTrajectoryQueue.add(trajectories.getCargoSideNearToLoadingStationTrajectory(startingSide));
+        CommandGroup loadingStationPickup1 = new CommandGroup();
+        loadingStationPickup1.setRunWhenDisabled(true);
+        loadingStationPickup1.addSequential(new FollowTrajectoryCommand(trajectories.getCargoSideNearToLoadingStationTrajectory(startingSide)));
+        if (mode == AutonomousMode.AUTONOMOUS) {
+            group.addSequential(new DoTheThingCommand());
+            group.addSequential(loadingStationPickup1);
+            group.addSequential(new DoTheThingCommand());
+        } else {
+            hybridCommandQueue.add(loadingStationPickup1);
+        }
         // Next we want to go to the mid cargo ship
-        hybridTrajectoryQueue.add(trajectories.getLoadingStationToCargoSideMid(startingSide));
+        CommandGroup cargoMidPlace = new CommandGroup();
+        cargoMidPlace.setRunWhenDisabled(true);
+        cargoMidPlace.addSequential(new FollowTrajectoryCommand(trajectories.getLoadingStationToCargoSideMidTrajectory(startingSide)));
+        if (mode == AutonomousMode.AUTONOMOUS) {
+            group.addSequential(cargoMidPlace);
+            group.addSequential(new DoTheThingCommand());
+        } else {
+            hybridCommandQueue.add(cargoMidPlace);
+        }
         // Finally, drive back to the loading station
-        hybridTrajectoryQueue.add(trajectories.getCargoSideMidToLoadingStationTrajectory(startingSide));
+        Command loadingStationPickup2 = new FollowTrajectoryCommand(trajectories.getCargoSideMidToLoadingStationTrajectory(startingSide));
+        loadingStationPickup2.setRunWhenDisabled(true);
+        if (mode == AutonomousMode.AUTONOMOUS) {
+            group.addSequential(loadingStationPickup2);
+            group.addSequential(new DoTheThingCommand());
+        } else {
+            hybridCommandQueue.add(loadingStationPickup2);
+        }
+
+        // Place a 3rd hatch panel (Only will work if a hatch can be loaded in sandstorm.)
+        if (placeThirdPanelEntry.getBoolean(false)) {
+            Command placeThirdPanel = new FollowTrajectoryCommand(trajectories.getLoadingStationToRocketNearTrajectory(startingSide));
+            placeThirdPanel.setRunWhenDisabled(true);
+            if (mode == AutonomousMode.AUTONOMOUS) {
+                group.addSequential(placeThirdPanel);
+                group.addSequential(new DoTheThingCommand());
+            } else {
+                hybridCommandQueue.add(placeThirdPanel);
+            }
+
+            // Pickup a 4th hatch because why not
+            if (placeFourthPanelEntry.getBoolean(false)) {
+                Command pickupFourthPanel = new FollowTrajectoryCommand(trajectories.getRocketNearToLoadingStationTrajectory(startingSide));
+                pickupFourthPanel.setRunWhenDisabled(true);
+                if (mode == AutonomousMode.AUTONOMOUS) {
+                    group.addSequential(pickupFourthPanel);
+                    group.addSequential(new DoTheThingCommand());
+                } else {
+                    hybridCommandQueue.add(pickupFourthPanel);
+                }
+
+                Command placeFourthPanel = new FollowTrajectoryCommand(trajectories.getLoadingStationToRocketFarTrajectory(startingSide));
+                placeFourthPanel.setRunWhenDisabled(true);
+                if (mode == AutonomousMode.AUTONOMOUS) {
+                    group.addSequential(placeFourthPanel);
+                    group.addSequential(new DoTheThingCommand());
+                } else {
+                    hybridCommandQueue.add(placeFourthPanel);
+                }
+            }
+        }
 
         return group;
     }
 
-    public Queue<Trajectory> getTrajectoryQueue() {
-        return hybridTrajectoryQueue;
+    public Queue<Command> getHybridQueue() {
+        return hybridCommandQueue;
     }
 
     private enum AutonomousMode {
         DRIVEN,
+        HYBRID,
         AUTONOMOUS
     }
 }

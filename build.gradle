@@ -4,6 +4,7 @@ plugins {
 }
 
 sourceCompatibility = JavaVersion.VERSION_11
+targetCompatibility = JavaVersion.VERSION_11
 
 repositories {
     mavenCentral()
@@ -30,7 +31,7 @@ repositories {
 deploy {
     targets {
         roboRIO('roborio') {
-            team = frc.getTeamOrDefault(2910)
+            team = frc.getTeamOrDefault(9992)
         }
     }
     artifacts {

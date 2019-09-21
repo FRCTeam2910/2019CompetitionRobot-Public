@@ -15,6 +15,8 @@ public class DriveCommand extends Command {
         this.fieldOriented = fieldOriented;
 
         requires(DrivetrainSubsystem.getInstance());
+
+        this.setRunWhenDisabled(true);
     }
 
     @Override

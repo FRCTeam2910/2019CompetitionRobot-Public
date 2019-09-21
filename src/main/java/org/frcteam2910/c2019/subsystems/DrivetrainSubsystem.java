@@ -30,14 +30,14 @@ public class DrivetrainSubsystem extends SwerveDrivetrain {
             new CentripetalAccelerationConstraint(25.0 * 12.0)
     };
 
-    private static final double FRONT_LEFT_ANGLE_OFFSET_COMPETITION = Math.toRadians(-50.00 + 180.0);
-    private static final double FRONT_RIGHT_ANGLE_OFFSET_COMPETITION = Math.toRadians(-284.47 + 180.0);
-    private static final double BACK_LEFT_ANGLE_OFFSET_COMPETITION = Math.toRadians(-331.52 + 180.0);
-    private static final double BACK_RIGHT_ANGLE_OFFSET_COMPETITION = Math.toRadians(-209.22);
-    private static final double FRONT_LEFT_ANGLE_OFFSET_PRACTICE = Math.toRadians(-56.53 + 180);
-    private static final double FRONT_RIGHT_ANGLE_OFFSET_PRACTICE = Math.toRadians(-109.38 + 180);
-    private static final double BACK_LEFT_ANGLE_OFFSET_PRACTICE = Math.toRadians(-4.21 + 180);
-    private static final double BACK_RIGHT_ANGLE_OFFSET_PRACTICE = Math.toRadians(-332.17);
+    private static final double FRONT_LEFT_ANGLE_OFFSET_COMPETITION = Math.toRadians(-176.3204627908379 + 180.0);
+    private static final double FRONT_RIGHT_ANGLE_OFFSET_COMPETITION = Math.toRadians(-222.03175099310178);
+    private static final double BACK_LEFT_ANGLE_OFFSET_COMPETITION = Math.toRadians(-90.48893143542519 + 180.0);
+    private static final double BACK_RIGHT_ANGLE_OFFSET_COMPETITION = Math.toRadians(-268.64311864548347);
+    private static final double FRONT_LEFT_ANGLE_OFFSET_PRACTICE = Math.toRadians(-346.33384369870345 + 180.0);
+    private static final double FRONT_RIGHT_ANGLE_OFFSET_PRACTICE = Math.toRadians(-47.735857257929055);
+    private static final double BACK_LEFT_ANGLE_OFFSET_PRACTICE = Math.toRadians(-57.1115292960996 + 180.0);
+    private static final double BACK_RIGHT_ANGLE_OFFSET_PRACTICE = Math.toRadians(-122.9922320247071);
 
     private static final PidConstants FOLLOWER_TRANSLATION_CONSTANTS = new PidConstants(0.05, 0.01, 0.0);
     private static final PidConstants FOLLOWER_ROTATION_CONSTANTS = new PidConstants(0.2, 0.01, 0.0);
@@ -46,10 +46,11 @@ public class DrivetrainSubsystem extends SwerveDrivetrain {
     );
 
     private static final PidConstants SNAP_ROTATION_CONSTANTS = new PidConstants(0.3, 0.01, 0.0);
+    private static final PidConstants SNAP_TRANSLATION_CONSTANTS = new PidConstants(0.02, 0.0, 0.001);
 
     private static final DrivetrainSubsystem instance = new DrivetrainSubsystem();
 
-    private SwerveModule[] swerveModules;
+    private Mk2SwerveModule[] swerveModules;
 
     private HolonomicMotionProfiledTrajectoryFollower follower = new HolonomicMotionProfiledTrajectoryFollower(
             FOLLOWER_TRANSLATION_CONSTANTS,
@@ -59,6 +60,11 @@ public class DrivetrainSubsystem extends SwerveDrivetrain {
 
     private PidController snapRotationController = new PidController(SNAP_ROTATION_CONSTANTS);
     private double snapRotation = Double.NaN;
+
+    private PidController xPosController = new PidController(SNAP_TRANSLATION_CONSTANTS);
+    private PidController yPosController = new PidController(SNAP_TRANSLATION_CONSTANTS);
+    private RigidTransform2 targetPose = null;
+    private double targetForwardPercentOutput;
 
     private double lastTimestamp = 0;
 
@@ -78,7 +84,7 @@ public class DrivetrainSubsystem extends SwerveDrivetrain {
             backRightAngleOffset = BACK_RIGHT_ANGLE_OFFSET_PRACTICE;
         }
 
-        SwerveModule frontLeftModule = new Mk2SwerveModule(
+        Mk2SwerveModule frontLeftModule = new Mk2SwerveModule(
                 new Vector2(-TRACKWIDTH / 2.0, WHEELBASE / 2.0),
                 frontLeftAngleOffset,
                 new Spark(RobotMap.DRIVETRAIN_FRONT_LEFT_ANGLE_MOTOR),
@@ -87,7 +93,7 @@ public class DrivetrainSubsystem extends SwerveDrivetrain {
         );
         frontLeftModule.setName("Front Left");
 
-        SwerveModule frontRightModule = new Mk2SwerveModule(
+        Mk2SwerveModule frontRightModule = new Mk2SwerveModule(
                 new Vector2(TRACKWIDTH / 2.0, WHEELBASE / 2.0),
                 frontRightAngleOffset,
                 new Spark(RobotMap.DRIVETRAIN_FRONT_RIGHT_ANGLE_MOTOR),
@@ -96,7 +102,7 @@ public class DrivetrainSubsystem extends SwerveDrivetrain {
         );
         frontRightModule.setName("Front Right");
 
-        SwerveModule backLeftModule = new Mk2SwerveModule(
+        Mk2SwerveModule backLeftModule = new Mk2SwerveModule(
                 new Vector2(-TRACKWIDTH / 2.0, -WHEELBASE / 2.0),
                 backLeftAngleOffset,
                 new Spark(RobotMap.DRIVETRAIN_BACK_LEFT_ANGLE_MOTOR),
@@ -105,7 +111,7 @@ public class DrivetrainSubsystem extends SwerveDrivetrain {
         );
         backLeftModule.setName("Back Left");
 
-        SwerveModule backRightModule = new Mk2SwerveModule(
+        Mk2SwerveModule backRightModule = new Mk2SwerveModule(
                 new Vector2(TRACKWIDTH / 2.0, -WHEELBASE / 2.0),
                 backRightAngleOffset,
                 new Spark(RobotMap.DRIVETRAIN_BACK_RIGHT_ANGLE_MOTOR),
@@ -114,7 +120,7 @@ public class DrivetrainSubsystem extends SwerveDrivetrain {
         );
         backRightModule.setName("Back Right");
 
-        swerveModules = new SwerveModule[]{
+        swerveModules = new Mk2SwerveModule[]{
                 frontLeftModule,
                 frontRightModule,
                 backLeftModule,
@@ -123,6 +129,10 @@ public class DrivetrainSubsystem extends SwerveDrivetrain {
 
         snapRotationController.setInputRange(0.0, 2.0 * Math.PI);
         snapRotationController.setContinuous(true);
+        snapRotationController.setOutputRange(-0.5, 0.5);
+
+//        xPosController.setOutputRange(-0.15, 0.15);
+//        yPosController.setOutputRange(-0.15, 0.15);
     }
 
     public void setSnapRotation(double snapRotation) {
@@ -131,9 +141,23 @@ public class DrivetrainSubsystem extends SwerveDrivetrain {
         }
     }
 
+    public void stopSnap() {
+        synchronized (lock) {
+            this.snapRotation = Double.NaN;
+        }
+    }
+
+    public void setTargetPose(RigidTransform2 pose, double forwardPercentOutput) {
+        synchronized (lock) {
+            targetPose = pose;
+            targetForwardPercentOutput = forwardPercentOutput;
+        }
+    }
+
     @Override
     public void holonomicDrive(Vector2 translation, double rotation, boolean fieldOriented) {
         synchronized (lock) {
+            targetPose = null;
             this.signal = new HolonomicDriveSignal(translation, rotation, fieldOriented);
         }
     }
@@ -149,9 +173,13 @@ public class DrivetrainSubsystem extends SwerveDrivetrain {
         synchronized (lock) {
             localSnapRotation = snapRotation;
         }
+        RigidTransform2 currentPose = new RigidTransform2(
+                getKinematicPosition(),
+                getGyroscope().getAngle()
+        );
 
-        Optional<HolonomicDriveSignal> optSignal = follower.update(new RigidTransform2(getKinematicPosition(),
-                getGyroscope().getAngle()), getKinematicVelocity(), getGyroscope().getRate(), timestamp, dt);
+        Optional<HolonomicDriveSignal> optSignal = follower.update(currentPose, getKinematicVelocity(),
+                getGyroscope().getRate(), timestamp, dt);
         HolonomicDriveSignal localSignal;
 
         if (optSignal.isPresent()) {
@@ -177,6 +205,33 @@ public class DrivetrainSubsystem extends SwerveDrivetrain {
             synchronized (lock) {
                 snapRotation = Double.NaN;
             }
+        }
+
+        // Target pose overrides everything
+        RigidTransform2 localTargetPose;
+        double localTargetForwardPercentOutput;
+        synchronized (lock) {
+            localTargetPose = targetPose;
+            localTargetForwardPercentOutput = targetForwardPercentOutput;
+        }
+        if (localTargetPose != null) {
+            xPosController.setSetpoint(localTargetPose.translation.x);
+            yPosController.setSetpoint(localTargetPose.translation.y);
+            snapRotationController.setSetpoint(localTargetPose.rotation.toRadians());
+
+            localSignal = new HolonomicDriveSignal(
+                    new Vector2(
+                            xPosController.calculate(currentPose.translation.x, dt),
+                            yPosController.calculate(currentPose.translation.y, dt)
+                    ).rotateBy(currentPose.rotation.inverse())
+                    .multiply(0.0, 1.0)
+                    .add(localTargetForwardPercentOutput, 0.0),
+                    snapRotationController.calculate(currentPose.rotation.toRadians(), dt),
+                    false
+            );
+        } else {
+            xPosController.reset();
+            yPosController.reset();
         }
 
         super.holonomicDrive(localSignal.getTranslation(), localSignal.getRotation(), localSignal.isFieldOriented());
@@ -207,6 +262,10 @@ public class DrivetrainSubsystem extends SwerveDrivetrain {
             SmartDashboard.putNumber("Drivetrain Follower Y Error", localSegment.translation.y - position.y);
             SmartDashboard.putNumber("Drivetrain Follower Angle Error", localSegment.rotation.toDegrees() - getGyroscope().getAngle().toDegrees());
         }
+
+        for (Mk2SwerveModule module : swerveModules) {
+            SmartDashboard.putNumber(String.format("%s Module Drive Current Draw", module.getName()), module.getDriveCurrent());
+        }
     }
 
     public static DrivetrainSubsystem getInstance() {
@@ -236,6 +295,15 @@ public class DrivetrainSubsystem extends SwerveDrivetrain {
     @Override
     protected void initDefaultCommand() {
         setDefaultCommand(new HolonomicDriveCommand());
+    }
+
+    @Override
+    public void stop() {
+        super.stop();
+        synchronized (lock) {
+            snapRotation = Double.NaN;
+            targetPose = null;
+        }
     }
 
     public TrajectoryFollower<HolonomicDriveSignal> getFollower() {

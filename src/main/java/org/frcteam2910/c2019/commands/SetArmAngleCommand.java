@@ -9,6 +9,8 @@ public class SetArmAngleCommand extends Command {
 	public SetArmAngleCommand(double angle) {
 		this.angle = angle;
 		requires(CargoArmSubsystem.getInstance());
+
+		this.setRunWhenDisabled(true);
 	}
 
 	@Override

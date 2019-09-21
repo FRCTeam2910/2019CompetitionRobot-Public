@@ -18,6 +18,11 @@ public class SetBottomCargoRollerSpeedCommand extends Command {
     }
 
     @Override
+    protected void end() {
+        CargoGrabberSubsystem.getInstance().setBottomIntakeSpeed(0.0);
+    }
+
+    @Override
     protected boolean isFinished() {
         return false;
     }

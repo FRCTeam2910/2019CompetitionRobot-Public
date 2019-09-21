@@ -1,6 +1,7 @@
 package org.frcteam2910.c2019.commands;
 
 import edu.wpi.first.wpilibj.command.Command;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import org.frcteam2910.c2019.subsystems.DrivetrainSubsystem;
 import org.frcteam2910.common.drivers.SwerveModule;
 
@@ -38,6 +39,7 @@ public class WaitForFrontWheelsToDriveDistanceCommand extends Command {
         if (moduleCount == 0) {
             return false;
         } else {
+            SmartDashboard.putNumber("Distance Driven", avgDistance / moduleCount);
             return avgDistance / moduleCount > distance;
         }
     }

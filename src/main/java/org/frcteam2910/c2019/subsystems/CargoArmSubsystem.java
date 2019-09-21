@@ -4,12 +4,17 @@ import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Spark;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import org.frcteam2910.common.control.MotionProfileFollower;
 import org.frcteam2910.common.control.PidConstants;
 import org.frcteam2910.common.control.PidController;
 import org.frcteam2910.common.math.MathUtils;
+import org.frcteam2910.common.motion.MotionProfile;
+import org.frcteam2910.common.motion.TrapezoidalMotionProfile;
 import org.frcteam2910.common.robot.drivers.NavX;
 import org.frcteam2910.common.robot.subsystems.Subsystem;
 import org.frcteam2910.c2019.RobotMap;
+
+import java.util.Optional;
 
 public class CargoArmSubsystem extends Subsystem {
     public static final double CARGO_SHIP_SCORE_ANGLE = Math.toRadians(100.0);
@@ -17,15 +22,26 @@ public class CargoArmSubsystem extends Subsystem {
     public static final double BOTTOM_ANGLE = Math.toRadians(2.0);
     public static final double VISION_TARGET_ANGLE = Math.toRadians(95.0);
 
-    private static final double ANGLE_OFFSET_COMPETITION = Math.toRadians(-207.87);
+    private static final double ANGLE_OFFSET_COMPETITION = Math.toRadians(-221.75);
     private static final double ANGLE_OFFSET_PRACTICE = Math.toRadians(-212.11148939808933);
 
     // These really shouldn't be different but it is good to have so we can make sure we don't run into the hard stops.
-    private static final double MAX_ANGLE_COMPETITION = Math.toRadians(109.47);
+    private static final double MAX_ANGLE_COMPETITION = Math.toRadians(108.25736028138388);
     private static final double MAX_ANGLE_PRACTICE = Math.toRadians(110.41971277880431);
 
     private static final double ENCODER_GEAR_RATIO = 24.0 / 54.0;
     private static final double ALLOWABLE_TARGET_ANGLE_ERROR = Math.toRadians(4.0); // Allowable error range of 2 degrees
+
+    private static final MotionProfile.Constraints UPWARDS_MOTION_CONSTRAINTS = new MotionProfile.Constraints(
+            Math.toRadians(180.0),
+            Math.toRadians(550.0)
+    );
+    private static final MotionProfile.Constraints DOWNWARDS_MOTION_CONSTRAINTS = new MotionProfile.Constraints(
+            Math.toRadians(180.0),
+            Math.toRadians(800.0)
+    );
+    private static final double MOTION_KV = 1.0 / Math.toRadians(180.0);
+    private static final double MOTION_KA = 1.0 / Math.toRadians(4800.0);
 
     private static final double ANGLE_FEEDFORWARD = 0.03;
 
@@ -39,10 +55,11 @@ public class CargoArmSubsystem extends Subsystem {
     private final double angleOffset;
     private final double maxAngle;
 
-    private final PidConstants positionPidConstants = new PidConstants(2.0, 1.25, 0.0);
+    private final PidConstants followerPidConstants = new PidConstants(2.0, 0.0, 0.0);
     private final PidConstants pitchPidConstants = new PidConstants(1.0 / Math.toRadians(10.0), 0.0, 0.0);
 
-    private PidController positionController = new PidController(positionPidConstants);
+    private PidController followerController = new PidController(followerPidConstants);
+    private MotionProfileFollower follower = new MotionProfileFollower(followerController, MOTION_KV, MOTION_KA);
     private PidController pitchController = new PidController(pitchPidConstants);
 
     private final Object sensorLock = new Object();
@@ -51,7 +68,7 @@ public class CargoArmSubsystem extends Subsystem {
 
     private final Object stateLock = new Object();
     private State currentState = State.DISABLED;
-    private double targetAngle = 0.0;
+//    private double targetAngle = 0.0;
     private double targetPitch = 0.0;
     private boolean pitchOnlyDown = false;
 
@@ -66,10 +83,10 @@ public class CargoArmSubsystem extends Subsystem {
             maxAngle = MAX_ANGLE_COMPETITION;
         }
 
-        positionController.setInputRange(0.0, 2.0 * Math.PI);
-        positionController.setContinuous(true);
-        positionController.setOutputRange(-1.0, 1.0);
-        positionController.setIntegralRange(Math.toRadians(10.0));
+        followerController.setInputRange(0.0, 2.0 * Math.PI);
+        followerController.setContinuous(true);
+        followerController.setOutputRange(-1.0, 1.0);
+        followerController.setIntegralRange(Math.toRadians(10.0));
     }
 
     public static CargoArmSubsystem getInstance() {
@@ -93,16 +110,37 @@ public class CargoArmSubsystem extends Subsystem {
     }
 
     public double getTargetAngle() {
-        synchronized (stateLock) {
-            return targetAngle;
+        MotionProfile profile = follower.getCurrentMotionProfile();
+        if (profile == null) {
+            return getCurrentAngle();
+        } else {
+            return profile.getEnd().position;
         }
     }
 
     public void setTargetAngle(double angle) {
         angle = MathUtils.clamp(angle, 0.0, maxAngle);
 
+        double currentAngle = getCurrentAngle();
+        if (currentAngle > Math.toRadians(180.0)) {
+            currentAngle -= Math.toRadians(360.0);
+        }
+
+        MotionProfile.Constraints constraints;
+        if (angle - currentAngle > 0.0) {
+            constraints = UPWARDS_MOTION_CONSTRAINTS;
+        } else {
+            constraints = DOWNWARDS_MOTION_CONSTRAINTS;
+        }
+
+        MotionProfile profile = new TrapezoidalMotionProfile(
+                new MotionProfile.Goal(currentAngle, 0.0),
+                new MotionProfile.Goal(angle, 0.0),
+                constraints
+        );
+
+        follower.follow(profile);
         synchronized (stateLock) {
-            targetAngle = angle;
             currentState = State.POSITION;
         }
     }
@@ -175,15 +213,23 @@ public class CargoArmSubsystem extends Subsystem {
                 }
                 break;
             case POSITION:
-                double localTargetAngle;
-                synchronized (stateLock) {
-                    localTargetAngle = targetAngle;
+//                double localTargetAngle;
+//                synchronized (stateLock) {
+//                    localTargetAngle = targetAngle;
+//                }
+
+//                positionController.setSetpoint(targetAngle);
+//                output = positionController.calculate(currentAngle, dt);
+
+                output = follower.update(currentAngle, timestamp, dt);
+                Optional<MotionProfile.State> lastState = follower.getLastState();
+                if (lastState.isPresent()) {
+                    SmartDashboard.putNumber("Target Arm Angle", Math.toDegrees(lastState.get().position));
+                    output += ANGLE_FEEDFORWARD * Math.cos(lastState.get().position);
                 }
 
-                positionController.setSetpoint(targetAngle);
-                output = positionController.calculate(currentAngle, dt);
-
-                output += ANGLE_FEEDFORWARD * Math.cos(localTargetAngle);
+                SmartDashboard.putNumber("Follower output", output);
+                break;
         }
 
         motors[0].set(output);

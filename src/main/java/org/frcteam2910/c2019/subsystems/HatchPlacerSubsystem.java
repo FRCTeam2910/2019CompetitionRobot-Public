@@ -15,6 +15,8 @@ public class HatchPlacerSubsystem extends Subsystem {
             RobotMap.HATCH_EXTENDER_SOLENOID_CHANNEL);
     private Solenoid grabberSolenoid = new Solenoid(RobotMap.HATCH_GRABBER_SOLENOID_MODULE,
             RobotMap.HATCH_GRABBER_SOLENOID_CHANNEL);
+    private Solenoid placerSolenoid = new Solenoid(RobotMap.HATCH_PLACER_SOLENOID_MODULE,
+            RobotMap.HATCH_PLACER_SOLENOID_CHANNEL);
 
     private DigitalInput leftLimitSwitch = new DigitalInput(RobotMap.HATCH_GRABBER_LIMIT_SWITCH_LEFT);
     private DigitalInput rightLimitSwitch = new DigitalInput(RobotMap.HATCH_GRABBER_LIMIT_SWITCH_RIGHT);
@@ -24,12 +26,16 @@ public class HatchPlacerSubsystem extends Subsystem {
     private boolean extended = false;
     private boolean releasedChanged = true;
     private boolean released = false;
+    private boolean placingChanged = true;
+    private boolean placing = false;
 
     private Notifier canUpdateThread = new Notifier(() -> {
         boolean localExtended;
         boolean localExtendedChanged;
         boolean localGrabbing;
         boolean localGrabbingChanged;
+        boolean localPlacing;
+        boolean localPlacingChanged;
         synchronized (canLock) {
             localExtended = extended;
             localExtendedChanged = extendedChanged;
@@ -38,6 +44,10 @@ public class HatchPlacerSubsystem extends Subsystem {
             localGrabbing = released;
             localGrabbingChanged = releasedChanged;
             releasedChanged = false;
+
+            localPlacing = placing;
+            localPlacingChanged = placingChanged;
+            placingChanged = false;
         }
 
         if (localExtendedChanged) {
@@ -46,6 +56,10 @@ public class HatchPlacerSubsystem extends Subsystem {
 
         if (localGrabbingChanged) {
             grabberSolenoid.set(localGrabbing);
+        }
+
+        if (localPlacingChanged) {
+            placerSolenoid.set(localPlacing);
         }
     });
 
@@ -86,12 +100,30 @@ public class HatchPlacerSubsystem extends Subsystem {
         }
     }
 
+    public void retractPlacer() {
+        synchronized (canLock) {
+            placingChanged = placing;
+            placing = false;
+        }
+    }
+
+    public void extendPlacer() {
+        synchronized (canLock) {
+            placingChanged = !placing;
+            placing = true;
+        }
+    }
+
     public boolean getRightLimitSwitch() {
         return !rightLimitSwitch.get();
     }
 
     public boolean getLeftLimitSwitch() {
         return !leftLimitSwitch.get();
+    }
+
+    public boolean hasHatch() {
+        return getLeftLimitSwitch() || getRightLimitSwitch();
     }
 
     @Override
@@ -105,4 +137,10 @@ public class HatchPlacerSubsystem extends Subsystem {
 
     @Override
     protected void initDefaultCommand() { }
+
+    public boolean isReleased() {
+        synchronized (canLock) {
+            return released;
+        }
+    }
 }
