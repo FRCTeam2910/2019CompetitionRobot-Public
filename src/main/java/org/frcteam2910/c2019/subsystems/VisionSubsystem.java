@@ -18,7 +18,7 @@ public class VisionSubsystem extends Subsystem {
         cargoLimelight.setCamMode(Limelight.CamMode.DRIVER);
 
         hatchLimelight.setCamMode(Limelight.CamMode.DRIVER);
-        hatchLimelight.setPipeline(9);
+        hatchLimelight.setPipeline(8);
     }
 
     public static VisionSubsystem getInstance() {

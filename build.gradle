@@ -31,7 +31,7 @@ repositories {
 deploy {
     targets {
         roboRIO('roborio') {
-            team = frc.getTeamOrDefault(9992)
+            team = frc.getTeamOrDefault(2910)
         }
     }
     artifacts {

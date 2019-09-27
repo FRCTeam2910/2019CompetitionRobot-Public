@@ -9,7 +9,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import org.frcteam2910.c2019.autonomous.AutonomousSelector;
 import org.frcteam2910.c2019.commands.*;
 import org.frcteam2910.c2019.subsystems.*;
-import org.frcteam2910.c2019.vision.api.Gamepiece;
 import org.frcteam2910.common.robot.commands.ZeroFieldOrientedCommand;
 import org.frcteam2910.common.robot.input.DPadButton;
 import org.frcteam2910.common.robot.input.XboxController;
@@ -38,35 +37,38 @@ public class OI {
             primaryController.getRightTriggerAxis().whenReleased(group);
         }
 
-//        primaryController.getAButton().whenPressed(new SetClimberExtendedCommand(true));
-//        primaryController.getAButton().whenReleased(new SetClimberExtendedCommand(false));
         primaryController.getAButton().whileHeld(new SetRobotPitchCommand(Math.toRadians(12.0)));
 
-        primaryController.getLeftBumperButton().whenPressed(new SetArmAngleCommand(CargoArmSubsystem.VISION_TARGET_ANGLE));
-        primaryController.getLeftBumperButton().whileHeld(new VisionTargetCommand(Gamepiece.HATCH_PANEL));
-        primaryController.getLeftBumperButton().whenReleased(new ConditionalCommand(new InstantCommand(() -> {
-            autonomousSelector.getHybridQueue().remove().start();
-        })) {
-            @Override
-            protected boolean condition() {
-                System.out.printf("Checking %d%n", autonomousSelector.getHybridQueue().size());
-                return DriverStation.getInstance().isAutonomous() && !autonomousSelector.getHybridQueue().isEmpty();
-            }
-        });
-
-        Command doTheThingCommand = new DoTheThingCommand();
-        primaryController.getRightBumperButton().whenPressed(doTheThingCommand);
-        primaryController.getRightBumperButton().whenReleased(new RetractHatchPlacerCommand());
-        primaryController.getRightBumperButton().whenReleased(new InstantCommand(doTheThingCommand::cancel));
-        primaryController.getRightBumperButton().whenReleased(new ConditionalCommand(new InstantCommand(() -> {
-            autonomousSelector.getHybridQueue().remove().start();
-        })) {
-            @Override
-            protected boolean condition() {
-                System.out.printf("Checking %d%n", autonomousSelector.getHybridQueue().size());
-                return DriverStation.getInstance().isAutonomous() && !autonomousSelector.getHybridQueue().isEmpty();
-            }
-        });
+        {
+            Command doTheThingCommand = new DoTheThingCommand(true, true);
+            primaryController.getRightBumperButton().whenPressed(doTheThingCommand);
+            primaryController.getRightBumperButton().whenReleased(new RetractHatchPlacerCommand());
+            primaryController.getRightBumperButton().whenReleased(new InstantCommand(doTheThingCommand::cancel));
+            primaryController.getRightBumperButton().whenReleased(new ConditionalCommand(new InstantCommand(() -> {
+                autonomousSelector.getHybridQueue().remove().start();
+            })) {
+                @Override
+                protected boolean condition() {
+                    System.out.printf("Checking %d%n", autonomousSelector.getHybridQueue().size());
+                    return DriverStation.getInstance().isAutonomous() && !autonomousSelector.getHybridQueue().isEmpty();
+                }
+            });
+        }
+        {
+            Command doTheThingCommand = new DoTheThingCommand(false, true);
+            primaryController.getLeftBumperButton().whenPressed(doTheThingCommand);
+            primaryController.getLeftBumperButton().whenReleased(new RetractHatchPlacerCommand());
+            primaryController.getLeftBumperButton().whenReleased(new InstantCommand(doTheThingCommand::cancel));
+            primaryController.getLeftBumperButton().whenReleased(new ConditionalCommand(new InstantCommand(() -> {
+                autonomousSelector.getHybridQueue().remove().start();
+            })) {
+                @Override
+                protected boolean condition() {
+                    System.out.printf("Checking %d%n", autonomousSelector.getHybridQueue().size());
+                    return DriverStation.getInstance().isAutonomous() && !autonomousSelector.getHybridQueue().isEmpty();
+                }
+            });
+        }
 
         primaryController.getDPadButton(DPadButton.Direction.UP).whenPressed(
                 new SetHatchFloorGathererAngleCommand(HatchFloorGathererSubsystem.getInstance().getMaxAngle()));
@@ -78,7 +80,7 @@ public class OI {
         primaryController.getBackButton().whenPressed(new ZeroFieldOrientedCommand(DrivetrainSubsystem.getInstance()));
 
         // Climbing
-        primaryController.getStartButton().whenPressed(new InstantCommand(new Runnable(){
+        primaryController.getStartButton().whenPressed(new InstantCommand(new Runnable() {
             private SendableChooser<Integer> climbModeSendable = new SendableChooser<>();
 
             {

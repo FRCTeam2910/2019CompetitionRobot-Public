@@ -24,9 +24,11 @@ public class DrivetrainSubsystem extends SwerveDrivetrain {
     private static final double TRACKWIDTH = 19.5;
     private static final double WHEELBASE = 23.5;
 
+    private static final double MAX_VELOCITY = 12.0 * 12.0;
+
     public static final ITrajectoryConstraint[] CONSTRAINTS = {
-            new MaxVelocityConstraint(12.0 * 12.0),
-            new MaxAccelerationConstraint(15.0 * 12.0),
+            new MaxVelocityConstraint(MAX_VELOCITY),
+            new MaxAccelerationConstraint(13.0 * 12.0),
             new CentripetalAccelerationConstraint(25.0 * 12.0)
     };
 
@@ -34,10 +36,10 @@ public class DrivetrainSubsystem extends SwerveDrivetrain {
     private static final double FRONT_RIGHT_ANGLE_OFFSET_COMPETITION = Math.toRadians(-222.03175099310178);
     private static final double BACK_LEFT_ANGLE_OFFSET_COMPETITION = Math.toRadians(-90.48893143542519 + 180.0);
     private static final double BACK_RIGHT_ANGLE_OFFSET_COMPETITION = Math.toRadians(-268.64311864548347);
-    private static final double FRONT_LEFT_ANGLE_OFFSET_PRACTICE = Math.toRadians(-346.33384369870345 + 180.0);
-    private static final double FRONT_RIGHT_ANGLE_OFFSET_PRACTICE = Math.toRadians(-47.735857257929055);
-    private static final double BACK_LEFT_ANGLE_OFFSET_PRACTICE = Math.toRadians(-57.1115292960996 + 180.0);
-    private static final double BACK_RIGHT_ANGLE_OFFSET_PRACTICE = Math.toRadians(-122.9922320247071);
+    private static final double FRONT_LEFT_ANGLE_OFFSET_PRACTICE = Math.toRadians(-170.2152486947372);
+    private static final double FRONT_RIGHT_ANGLE_OFFSET_PRACTICE = Math.toRadians(-43.55619048306742);
+    private static final double BACK_LEFT_ANGLE_OFFSET_PRACTICE = Math.toRadians(-237.47063008637048);
+    private static final double BACK_RIGHT_ANGLE_OFFSET_PRACTICE = Math.toRadians(-336.70093128378477);
 
     private static final PidConstants FOLLOWER_TRANSLATION_CONSTANTS = new PidConstants(0.05, 0.01, 0.0);
     private static final PidConstants FOLLOWER_ROTATION_CONSTANTS = new PidConstants(0.2, 0.01, 0.0);
@@ -46,7 +48,6 @@ public class DrivetrainSubsystem extends SwerveDrivetrain {
     );
 
     private static final PidConstants SNAP_ROTATION_CONSTANTS = new PidConstants(0.3, 0.01, 0.0);
-    private static final PidConstants SNAP_TRANSLATION_CONSTANTS = new PidConstants(0.02, 0.0, 0.001);
 
     private static final DrivetrainSubsystem instance = new DrivetrainSubsystem();
 
@@ -60,11 +61,6 @@ public class DrivetrainSubsystem extends SwerveDrivetrain {
 
     private PidController snapRotationController = new PidController(SNAP_ROTATION_CONSTANTS);
     private double snapRotation = Double.NaN;
-
-    private PidController xPosController = new PidController(SNAP_TRANSLATION_CONSTANTS);
-    private PidController yPosController = new PidController(SNAP_TRANSLATION_CONSTANTS);
-    private RigidTransform2 targetPose = null;
-    private double targetForwardPercentOutput;
 
     private double lastTimestamp = 0;
 
@@ -130,9 +126,6 @@ public class DrivetrainSubsystem extends SwerveDrivetrain {
         snapRotationController.setInputRange(0.0, 2.0 * Math.PI);
         snapRotationController.setContinuous(true);
         snapRotationController.setOutputRange(-0.5, 0.5);
-
-//        xPosController.setOutputRange(-0.15, 0.15);
-//        yPosController.setOutputRange(-0.15, 0.15);
     }
 
     public void setSnapRotation(double snapRotation) {
@@ -147,17 +140,9 @@ public class DrivetrainSubsystem extends SwerveDrivetrain {
         }
     }
 
-    public void setTargetPose(RigidTransform2 pose, double forwardPercentOutput) {
-        synchronized (lock) {
-            targetPose = pose;
-            targetForwardPercentOutput = forwardPercentOutput;
-        }
-    }
-
     @Override
     public void holonomicDrive(Vector2 translation, double rotation, boolean fieldOriented) {
         synchronized (lock) {
-            targetPose = null;
             this.signal = new HolonomicDriveSignal(translation, rotation, fieldOriented);
         }
     }
@@ -186,7 +171,6 @@ public class DrivetrainSubsystem extends SwerveDrivetrain {
             localSignal = optSignal.get();
 
             synchronized (lock) {
-                signal = localSignal;
                 segment = follower.getLastSegment();
             }
         } else {
@@ -205,33 +189,6 @@ public class DrivetrainSubsystem extends SwerveDrivetrain {
             synchronized (lock) {
                 snapRotation = Double.NaN;
             }
-        }
-
-        // Target pose overrides everything
-        RigidTransform2 localTargetPose;
-        double localTargetForwardPercentOutput;
-        synchronized (lock) {
-            localTargetPose = targetPose;
-            localTargetForwardPercentOutput = targetForwardPercentOutput;
-        }
-        if (localTargetPose != null) {
-            xPosController.setSetpoint(localTargetPose.translation.x);
-            yPosController.setSetpoint(localTargetPose.translation.y);
-            snapRotationController.setSetpoint(localTargetPose.rotation.toRadians());
-
-            localSignal = new HolonomicDriveSignal(
-                    new Vector2(
-                            xPosController.calculate(currentPose.translation.x, dt),
-                            yPosController.calculate(currentPose.translation.y, dt)
-                    ).rotateBy(currentPose.rotation.inverse())
-                    .multiply(0.0, 1.0)
-                    .add(localTargetForwardPercentOutput, 0.0),
-                    snapRotationController.calculate(currentPose.rotation.toRadians(), dt),
-                    false
-            );
-        } else {
-            xPosController.reset();
-            yPosController.reset();
         }
 
         super.holonomicDrive(localSignal.getTranslation(), localSignal.getRotation(), localSignal.isFieldOriented());
@@ -302,11 +259,10 @@ public class DrivetrainSubsystem extends SwerveDrivetrain {
         super.stop();
         synchronized (lock) {
             snapRotation = Double.NaN;
-            targetPose = null;
         }
     }
 
-    public TrajectoryFollower<HolonomicDriveSignal> getFollower() {
+    public HolonomicMotionProfiledTrajectoryFollower getFollower() {
         return follower;
     }
 }
