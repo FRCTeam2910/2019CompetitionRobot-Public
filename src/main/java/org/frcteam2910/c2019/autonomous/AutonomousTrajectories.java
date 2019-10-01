@@ -81,14 +81,14 @@ public class AutonomousTrajectories {
         habToRocketFarPathLeft.addSegment(
                 new PathLineSegment(
                         new Vector2(0.0, 0.0),
-                        new Vector2(182.91, 39.67)
+                        new Vector2(188.65, 39.78)
                 )
         );
         habToRocketFarPathLeft.addSegment(
                 new PathArcSegment(
-                        new Vector2(182.91, 39.67),
-                        new Vector2(201.93, 84.99),
-                        new Vector2(176.55, 68.98)
+                        new Vector2(188.65, 39.78),
+                        new Vector2(207.93, 84.99),
+                        new Vector2(182.46, 69.13)
                 ),
                 ROCKET_FAR_ROTATION
         );
@@ -102,7 +102,7 @@ public class AutonomousTrajectories {
         Path hab2ToCargoSideNearPathLeft = new Path(CARGO_SHIP_SIDE_HATCH_ROTATION);
         hab2ToCargoSideNearPathLeft.addSegment(new PathLineSegment(
                 new Vector2(0.0, 0.0),
-                new Vector2(252.25, 36.88)
+                new Vector2(270.25, 36.88)
         ));
         hab2ToCargoSideNearPathLeft.subdivide(SUBDIVIDE_ITERATIONS);
         Path hab2ToCargoSideNearPathRight = hab2ToCargoSideNearPathLeft.mirror();
@@ -115,14 +115,14 @@ public class AutonomousTrajectories {
         hab2ToRocketFarPathLeft.addSegment(
                 new PathLineSegment(
                         new Vector2(0.0, 0.0),
-                        new Vector2(243.71, 51.75)
+                        new Vector2(270.36, 61.48)
                 )
         );
         hab2ToRocketFarPathLeft.addSegment(
                 new PathArcSegment(
-                        new Vector2(243.71, 51.75),
-                        new Vector2(262.92, 96.99),
-                        new Vector2(237.48, 81.09)
+                        new Vector2(270.36, 61.48),
+                        new Vector2(288.93, 106.99),
+                        new Vector2(263.71, 90.73)
                 ),
                 ROCKET_FAR_ROTATION
         );
@@ -165,14 +165,14 @@ public class AutonomousTrajectories {
         loadingStationToCargoSideMidPathLeft.addSegment(
                 new PathLineSegment(
                         new Vector2(0.0, 0.0),
-                        new Vector2(205.9, -50.48)
+                        new Vector2(209.87, -50.62)
                 ),
                 CARGO_SHIP_SIDE_HATCH_ROTATION
         );
         loadingStationToCargoSideMidPathLeft.addSegment(
                 new PathLineSegment(
-                        new Vector2(205.9, -50.48),
-                        new Vector2(244.75, -60.0)
+                        new Vector2(221.77, -51.03),
+                        new Vector2(260.75, -60.0)
                 )
         );
         loadingStationToCargoSideMidPathLeft.subdivide(SUBDIVIDE_ITERATIONS);

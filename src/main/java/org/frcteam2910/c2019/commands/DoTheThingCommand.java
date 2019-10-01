@@ -2,9 +2,7 @@ package org.frcteam2910.c2019.commands;
 
 import edu.wpi.first.wpilibj.command.*;
 import org.frcteam2910.c2019.subsystems.CargoArmSubsystem;
-import org.frcteam2910.c2019.subsystems.DrivetrainSubsystem;
 import org.frcteam2910.c2019.subsystems.HatchPlacerSubsystem;
-import org.frcteam2910.c2019.subsystems.Superstructure;
 import org.frcteam2910.common.control.ITrajectoryConstraint;
 import org.frcteam2910.common.control.MaxAccelerationConstraint;
 import org.frcteam2910.common.control.MaxVelocityConstraint;
@@ -12,8 +10,8 @@ import org.frcteam2910.common.math.Rotation2;
 import org.frcteam2910.common.math.Vector2;
 
 public class DoTheThingCommand extends CommandGroup {
-    private static final double PLACE_DISTANCE = 21.0;
-    private static final double PLACE_HORIZ_DISTANCE = 1.25;
+    private static final double RELEASE_DISTANCE = 21.5;
+    private static final double RELEASE_HORIZ_DISTANCE = 1.25;
 
     public DoTheThingCommand(boolean placeOnRocket, boolean backupAfterPlace) {
         this.setRunWhenDisabled(true);
@@ -32,7 +30,7 @@ public class DoTheThingCommand extends CommandGroup {
         CommandGroup placeGroup = new CommandGroup();
         placeGroup.setRunWhenDisabled(true);
         placeGroup.addSequential(new ImprovedVisionPlaceCommand(
-                (distanceFromTarget, horizDistance) -> distanceFromTarget < PLACE_DISTANCE && Math.abs(horizDistance) < PLACE_HORIZ_DISTANCE,
+                (distanceFromTarget, horizDistance) -> distanceFromTarget < RELEASE_DISTANCE && Math.abs(horizDistance) < RELEASE_HORIZ_DISTANCE,
                 placeOnRocket ? DoTheThingCommand::chooseRocketTarget : DoTheThingCommand::chooseCargoShipTarget,
                 new ITrajectoryConstraint[]{
                         new MaxVelocityConstraint(12.0 * 12.0),

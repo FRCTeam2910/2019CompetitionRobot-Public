@@ -22,10 +22,19 @@ import org.frcteam2910.common.util.MovingAverage;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import static org.frcteam2910.common.robot.Utilities.deadband;
+
 public class ImprovedVisionPlaceCommand extends Command {
     private static final boolean USE_HIGH_RESOLUTION_MODE = false;
 
-    private static final double PLACEMENT_DISTANCE = 18.0;
+    private static final double PLACEMENT_DISTANCE = 20.0;
+    private static final double OUTER_PLACEMENT_DISTANCE = 36 + PLACEMENT_DISTANCE;
+    private static final double MAX_PLACEMENT_DISTANCE_CORRECTION = 5;
+    private static final double INTERPOLATION_RATIO = MAX_PLACEMENT_DISTANCE_CORRECTION / (OUTER_PLACEMENT_DISTANCE - PLACEMENT_DISTANCE);
+
+    private static final double HORIZONTAL_CORRECTION_MAX = 4;
+    private static final double HORIZONTAL_CORRECTION_FACTOR = 0.25;
+    private static final double HORIZONTAL_CORRECTION_DEADBAND_BUFFER = 0.5;
 
     private static final int FINISH_SUCCESSES_NEEDED = 4;
 
@@ -46,6 +55,8 @@ public class ImprovedVisionPlaceCommand extends Command {
     private Rotation2 targetAngle;
     private Vector2 robotOrientedPositionOffset;
     private double distance = Double.POSITIVE_INFINITY;
+    private double previousDistance;
+    private Vector2 previousRobotOrientedPositionOffset;
 
     private int successesNeeded;
 
@@ -115,41 +126,52 @@ public class ImprovedVisionPlaceCommand extends Command {
                 robotOrientedPositionOffset = Vector2.fromAngle(Rotation2.fromRadians(limelight.getTargetPosition().x)).scale(distance);
             }
 
-            SmartDashboard.putNumber("Target distance", robotOrientedPositionOffset.length);
+            if (distance != previousDistance || robotOrientedPositionOffset.x != previousRobotOrientedPositionOffset.x || robotOrientedPositionOffset.y != previousRobotOrientedPositionOffset.y) {
+                previousDistance = distance;
+                previousRobotOrientedPositionOffset = robotOrientedPositionOffset;
 
-            RigidTransform2 currentPose = new RigidTransform2(
-                    DrivetrainSubsystem.getInstance().getKinematicPosition(),
-                    Superstructure.getInstance().getGyroscope().getAngle()
-            );
-            RigidTransform2 targetPose = currentPose.transformBy(
-                    new RigidTransform2(
-                            robotOrientedPositionOffset.subtract(targetOffset).multiply(-1.0, 1.0),
-                            Rotation2.ZERO
-                    )
-            );
+                double unboundedHorizontalError = Math.abs(robotOrientedPositionOffset.y) * HORIZONTAL_CORRECTION_FACTOR;
+                double boundedHorizontalError = Math.min(unboundedHorizontalError, HORIZONTAL_CORRECTION_MAX);
+                double horizontalError = deadband(boundedHorizontalError, HORIZONTAL_CORRECTION_DEADBAND_BUFFER);
+                Vector2 newTargetOffset = targetOffset.add(interpolate(distance) + horizontalError, 0);
 
-            Path path = new Path(targetAngle);
-            path.addSegment(
-                    new PathLineSegment(
-                            DrivetrainSubsystem.getInstance().getKinematicPosition(),
-                            targetPose.translation
-                    )
-            );
+                SmartDashboard.putNumber("Target distance", robotOrientedPositionOffset.length);
 
-            double startingVelocity = DrivetrainSubsystem.getInstance().getKinematicVelocity().length;
-            Trajectory.Segment lastSegment = DrivetrainSubsystem.getInstance().getFollower().getLastSegment();
-            if (lastSegment != null) {
-                startingVelocity = lastSegment.velocity;
+                RigidTransform2 currentPose = new RigidTransform2(
+                        DrivetrainSubsystem.getInstance().getKinematicPosition(),
+                        Superstructure.getInstance().getGyroscope().getAngle()
+                );
+
+                RigidTransform2 targetPose = currentPose.transformBy(
+                        new RigidTransform2(
+                                robotOrientedPositionOffset.subtract(newTargetOffset).multiply(-1.0, 1.0),
+                                Rotation2.ZERO
+                        )
+                );
+
+                Path path = new Path(targetAngle);
+                path.addSegment(
+                        new PathLineSegment(
+                                DrivetrainSubsystem.getInstance().getKinematicPosition(),
+                                targetPose.translation
+                        )
+                );
+
+                double startingVelocity = DrivetrainSubsystem.getInstance().getKinematicVelocity().length;
+                Trajectory.Segment lastSegment = DrivetrainSubsystem.getInstance().getFollower().getLastSegment();
+                if (lastSegment != null) {
+                    startingVelocity = lastSegment.velocity;
+                }
+
+                Trajectory trajectory = new Trajectory(
+                        startingVelocity,
+                        0.0 * 12.0,
+                        path,
+                        trajectoryConstraints
+                );
+
+                DrivetrainSubsystem.getInstance().getFollower().follow(trajectory);
             }
-
-            Trajectory trajectory = new Trajectory(
-                    startingVelocity,
-                    0.0 * 12.0,
-                    path,
-                    trajectoryConstraints
-            );
-
-            DrivetrainSubsystem.getInstance().getFollower().follow(trajectory);
         }
     }
 
@@ -176,5 +198,15 @@ public class ImprovedVisionPlaceCommand extends Command {
 
         Robot.getOi().primaryController.getRawJoystick().setRumble(GenericHID.RumbleType.kLeftRumble, 0.0);
         limelight.setCamMode(Limelight.CamMode.DRIVER);
+    }
+
+    private double interpolate(double toInterpolate) {
+        if (toInterpolate <= PLACEMENT_DISTANCE) {
+            return 0;
+        } else if (toInterpolate >= OUTER_PLACEMENT_DISTANCE) {
+            return MAX_PLACEMENT_DISTANCE_CORRECTION;
+        } else {
+            return INTERPOLATION_RATIO * (toInterpolate - PLACEMENT_DISTANCE);
+        }
     }
 }
