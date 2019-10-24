@@ -108,7 +108,7 @@ public class OI {
                 }
             }
         }));
-        primaryController.getStartButton().whenReleased(new AbortClimbCommand());
+        primaryController.getYButton().whenPressed(new AbortClimbCommand());
 
 
         // Cargo arm top position

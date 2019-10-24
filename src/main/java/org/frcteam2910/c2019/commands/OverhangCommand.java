@@ -41,6 +41,9 @@ public class OverhangCommand extends CommandGroup {
 //        addSequential(new InstantCommand(() -> {
 //            DrivetrainSubsystem.getInstance().getCurrentCommand().cancel();
 //        }));
-        addSequential(new DriveCommand(new Vector2(DRIVE_SPEED, 0.0), 0.0, false));
+
+        addParallel(new DriveCommand(new Vector2(DRIVE_SPEED, 0.0), 0.0, false));
+        addSequential(new WaitForFrontWheelsToDriveDistanceCommand(12.0), 5.0);
+        addSequential(new DriveCommand(Vector2.ZERO, 0.0, false));
     }
 }
